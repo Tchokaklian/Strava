@@ -51,7 +51,7 @@ def select_all_cols06(conn):
         myCol.lon = row[col_lon]        
         myCol.col_code = row[col_code]
         myListeCols.append(myCol)
-            
+                    
     return myListeCols    
 
 #############################################################################
@@ -118,7 +118,7 @@ def compute_cols( myUser_id,myActivity_id):
 def cols_effectue(conn):
 
     cur = conn.cursor()
-    cur.execute("select col_name, col_alt, col_count from StravaMap_col C , StravaMap_col_counter M where C.col_code = M.col_code order by M.col_count desc")
+    cur.execute("select col_name, col_alt, col_count, C.col_code from StravaMap_col C , StravaMap_col_counter M where C.col_code = M.col_code order by M.col_count desc")
     rows = cur.fetchall()
 
     return rows

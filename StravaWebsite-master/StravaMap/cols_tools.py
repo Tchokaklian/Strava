@@ -24,6 +24,12 @@ class PointCol(PointGPS):
         self.name = "colName"
         self.col_code = "-"
 
+    def setPoint(self,PointGPS):        
+        self.lat = PointGPS.lat
+        self.lon = PointGPS.lon
+        self.alt = PointGPS.alt
+        self.name = PointGPS.name
+        self.col_code = PointGPS.col_code
 
 ####################################################        
 

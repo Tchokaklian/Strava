@@ -14,11 +14,36 @@ from StravaMap.col_dbtools import *
 def base_map(request):
     # Make your map object
     main_map = folium.Map(location=[43.765, 7.223], zoom_start = 6) # Create base map
+
+    conn = create_connection('db.sqlite3')    
+
+    # Les cols passés
+    colOK = cols_effectue(conn)    
+    listeOK = []
+    for oneCol in colOK:        
+        listeOK.append(oneCol[3])   # col_code
+        
+    # Tous les cols        
+    myColsList =  select_all_cols06(conn)         
+    # Plot Cols onto Folium Map
+    for oneCol in myColsList:
+        myCol = ct.PointCol()
+        myCol.setPoint(oneCol)
+        location = [myCol.lat,myCol.lon]
+        colColor = "red"
+        if myCol.col_code in listeOK :
+            colColor = "green"
+         
+        folium.Marker(location, popup=myCol.name,icon=folium.Icon(color=colColor, icon="flag")).add_to(main_map)
+    
     main_map_html = main_map._repr_html_() # Get HTML for website
 
     context = {
         "main_map":main_map_html
     }
+
+    
+                                
     return render(request, 'index.html', context)
 
 def connected_map(request):
@@ -34,18 +59,11 @@ def connected_map(request):
     
     activity_df_list = []
 
-    ############################
-    # 1st january 2008  -   1199145600
-    # 2009 1230768000
-    # 1st january 2023  -   1672531200
-    # 1st fabruary 2023 -   1675209600
-    # 1st march 2023    -   1677628800
-    # 1st april 2023    -   1680307200
-    # 1st may 2023      -   1682899200
+    ########################################################
     # 1st june 2023     -   1685577600
-    ############################
+    ########################################################
 
-    param = {'after': 1666224000, "per_page": 200}
+    param = {'after': 1685577600, "per_page": 200}
     activities_json = requests.get(activites_url, headers=header, params=param).json()
             
     ########################
