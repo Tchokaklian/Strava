@@ -1,0 +1,16 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+  <h1>Liste des activités</h1>
+  {% if activity_list %}
+  <ul>
+    {% for activity in activity_list %}      
+      <li>
+        {{activity.act_start_date|date:"d-M-Y" }} - <a href="{{ activity.get_absolute_url }}">{{ activity.act_name }}</a> - {{activity.act_dist_km|floatformat:2}} km - {{activity.act_den}}m        
+      </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+    <p>There are no Col in the Database.</p>
+  {% endif %}
+{% endblock %}

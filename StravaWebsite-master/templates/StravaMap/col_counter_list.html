@@ -1,0 +1,16 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+  <h1>Tous les cols effectués</h1>
+  {% if col_counter_list %}
+  <ul>
+    {% for colc in col_counter_list %}        
+          <li>
+            <a href="{{ colc.get_absolute_url }}">{{ colc.nom_col }}</a> ( {{ colc.col_code }} ) {{colc.col_count}} fois 
+          </li>      
+    {% endfor %}
+  </ul>
+  {% else %}
+    <p>There are no Col in the Database.</p>
+  {% endif %}
+{% endblock %}

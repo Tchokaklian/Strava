@@ -1,0 +1,16 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+  <h1>Liste des cols</h1>
+  {% if col_list %}
+  <ul>
+    {% for col in col_list %}
+      <li>
+        <a href="{{ col.get_absolute_url }}">({{col.col_code}}) - {{ col.col_name }}</a> ( {{col.col_alt}} m )
+      </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+    <p>There are no Col in the Database.</p>
+  {% endif %}
+{% endblock %}
