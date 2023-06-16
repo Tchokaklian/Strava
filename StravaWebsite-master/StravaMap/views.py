@@ -11,6 +11,11 @@ from StravaMap.col_dbtools import *
 
 
 # Create your views here.
+
+###################################################################
+#   Base Map
+###################################################################
+
 def base_map(request):
     # Make your map object
     main_map = folium.Map(location=[43.765, 7.223], zoom_start = 6) # Create base map
@@ -34,17 +39,34 @@ def base_map(request):
         if myCol.col_code in listeOK :
             colColor = "green"
          
-        folium.Marker(location, popup=myCol.name,icon=folium.Icon(color=colColor, icon="flag")).add_to(main_map)
+        folium.Marker(location, popup=myCol.name,icon=folium.Icon(color=colColor, icon="flag")).add_to(main_map)        
     
     main_map_html = main_map._repr_html_() # Get HTML for website
 
     context = {
         "main_map":main_map_html
     }
-
-    
-                                
+                                    
     return render(request, 'index.html', context)
+
+###################################################################
+#   Col Map
+###################################################################
+
+def col_map(request):
+    # Make your map object
+    print("col_map View >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+    col_map = folium.Map(location=[43.765, 7.223], zoom_start = 6) # Create base map            
+    col_map_html = col_map._repr_html_() # Get HTML for website    
+    context = {
+        "col_map":col_map_html
+    }
+                                    
+    return render(request, 'StravaMap/col_detail.html/', context)
+
+###################################################################
+#   Connected Map
+###################################################################
 
 def connected_map(request):
     # Make your map object
@@ -208,8 +230,36 @@ class Cols06koListView(generic.ListView):
                                    
         return qsCol.filter(col_code__icontains='FR-06').order_by("col_alt")    
     
-class ActivityListView(generic.ListView):    
-    def get_queryset(self):
+class ActivityListView(generic.ListView):        
+    def get_queryset(self):                
         return Activity.objects.all().order_by("-act_start_date")
-
     
+class ActivityDetailView(generic.DetailView):                   
+    model = Activity        
+   
+    """        
+    
+    def get_object(self, queryset=None):                
+        strava_id = self.kwargs.get('strava_id') or self.request.GET.get('strava_id') or None                
+        myObject = Activity.objects.filter(strava_id=strava_id)                 
+        print("CLASSE = ", type(myObject))   
+        print("act_name = ", myObject[0].act_name)         
+        print("strava_id = ", myObject[0].strava_id)         
+        print("act_type = ", myObject[0].act_type)                 
+                        
+        return myObject
+        
+    
+    
+    def get_context_data(self, **kwargs):
+        context = super(ActivityDetailView, self).get_context_data(**kwargs)
+        selected_Strava_id = self.kwargs.get('strava_id')        
+        context['strava_id'] = selected_Strava_id
+        print("get_context_data = ", selected_Strava_id)        
+        self.get_queryset().filter(strava_id=selected_Strava_id)
+        return context
+    """    
+                                     
+class ColsDetailView(generic.DetailView):
+	# specify the model to use    
+	model = Col    

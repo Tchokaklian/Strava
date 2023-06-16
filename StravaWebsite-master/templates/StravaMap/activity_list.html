@@ -6,7 +6,7 @@
   <ul>
     {% for activity in activity_list %}      
       <li>
-        {{activity.act_start_date|date:"d-M-Y" }} - <a href="{{ activity_detail.get_absolute_url }}">{{ activity.act_name }}</a> - {{activity.act_dist_km|floatformat:2}} km - {{activity.act_den}}m        
+        {{activity.act_start_date|date:"d-M-Y" }} - <a href={{activity.act_id}}>{{ activity.act_name }}</a> - {{activity.act_dist_km|floatformat:2}} km - {{activity.act_den}}m        
       </li>
     {% endfor %}
   </ul>
