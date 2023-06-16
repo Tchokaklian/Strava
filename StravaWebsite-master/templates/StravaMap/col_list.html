@@ -6,7 +6,7 @@
   <ul>
     {% for col in col_list %}
       <li>
-        <a href="{{ col.get_absolute_url }}">({{col.col_code}}) - {{ col.col_name }}</a> ( {{col.col_alt}} m )
+        <a href="{% url 'activity_detail' %}">({{col.col_code}}) - {{ col.col_name }}</a> ( {{col.col_alt}} m )                
       </li>
     {% endfor %}
   </ul>
