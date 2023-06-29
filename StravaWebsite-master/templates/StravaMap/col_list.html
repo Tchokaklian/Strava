@@ -3,13 +3,23 @@
 {% block content %}
   <h1>Liste des cols</h1>  
   {% if col_list %}
-  <ul>
+  <table>
+    <tr>
+        <td><b>Nom</td></b>
+        <td><b>Altitude</td></b>          
+        <td><b>Code 100 cols</td></b>          
+    </tr>      
     {% for col in col_list %}
-      <li>
-        <a href="{{ col.col_id }}">{{ col.col_name }}</a> ( {{col.col_alt}} m )
-      </li>
+      <tr>
+        <td>
+          <a href="{{ col.col_id }}">{{ col.col_name }}</a> 
+        </td>  
+        <td>{{col.col_alt}} m  </td>
+        <td>{{col.col_code}}</td>
+      </tr>  
+
     {% endfor %}
-  </ul>
+  </table>  
   {% else %}
     <p>There are no Col in the Database.</p>
   {% endif %}

@@ -6,9 +6,11 @@ import polyline
 from StravaMap.models import Activity
 from StravaMap.models import Col
 from StravaMap.models import Col_counter
+from StravaMap.models import Strava_user
 from StravaMap import cols_tools as ct
 from StravaMap.col_dbtools import *
-
+from StravaMap.vars import get_default_departement, get_map_center, get_strava_user, get_strava_user_id
+from django.db.models import Max
 
 # Create your views here.
 
@@ -17,10 +19,17 @@ from StravaMap.col_dbtools import *
 ###################################################################
 
 def base_map(request):
+                    
     # Make your map object
-    main_map = folium.Map(location=[43.765, 7.223], zoom_start = 6) # Create base map
+    main_map = folium.Map(location=get_map_center(), zoom_start = 6) # Create base map
 
     conn = create_connection('db.sqlite3')    
+    
+    feature_group_1000m = folium.FeatureGroup(name="Entre 0 et 1000 m").add_to(main_map)    
+    feature_group_2000m = folium.FeatureGroup(name="Entre 1000 et 2000 m").add_to(main_map)    
+    feature_group_3000m = folium.FeatureGroup(name="Au dessus de 2000 m").add_to(main_map)  
+        
+    folium.LayerControl().add_to(main_map)
 
     # Les cols passés
     colOK = cols_effectue(conn)    
@@ -29,7 +38,7 @@ def base_map(request):
         listeOK.append(oneCol[3])   # col_code
         
     # Tous les cols        
-    myColsList =  select_all_cols06(conn)         
+    myColsList =  select_all_cols(conn,get_default_departement())         
     # Plot Cols onto Folium Map
     for oneCol in myColsList:
         myCol = ct.PointCol()
@@ -38,8 +47,15 @@ def base_map(request):
         colColor = "red"
         if myCol.col_code in listeOK :
             colColor = "green"
-         
-        folium.Marker(location, popup=myCol.name,icon=folium.Icon(color=colColor, icon="flag")).add_to(main_map)        
+
+        # Altitude
+        if  myCol.alt < 1000:            
+            folium.Marker(location, popup=myCol.name,icon=folium.Icon(color=colColor, icon="flag")).add_to(feature_group_1000m)        
+        if  myCol.alt > 999 and myCol.alt < 2000 :            
+            folium.Marker(location, popup=myCol.name,icon=folium.Icon(color=colColor, icon="flag")).add_to(feature_group_2000m)        
+        if  myCol.alt > 1999 :            
+            folium.Marker(location, popup=myCol.name,icon=folium.Icon(color=colColor, icon="flag")).add_to(feature_group_3000m)        
+
     
     main_map_html = main_map._repr_html_() # Get HTML for website
 
@@ -50,44 +66,59 @@ def base_map(request):
     return render(request, 'index.html', context)
 
 ###################################################################
-#   Col Map
-###################################################################
-
-def col_map(request):
-    # Make your map object
-    print("col_map View >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-    col_map = folium.Map(location=[43.765, 7.223], zoom_start = 6) # Create base map            
-    col_map_html = col_map._repr_html_() # Get HTML for website    
-    context = {
-        "col_map":col_map_html
-    }
-                                    
-    return render(request, 'StravaMap/col_detail.html/', context)
-
-###################################################################
 #   Connected Map
 ###################################################################
 
 def connected_map(request):
-    # Make your map object
-    main_map = folium.Map(location=[43.765, 7.223], zoom_start = 6) # Create base map 
+        
+    # Make your map object    
+    main_map = folium.Map(location=get_map_center(), zoom_start = 6) # Create base map 
     user = request.user # Pulls in the Strava User data
     strava_login = user.social_auth.get(provider='strava') # Strava login
+    token_type = strava_login.extra_data['token_type'] 
     access_token = strava_login.extra_data['access_token'] # Strava Access token
+    refresh_token = strava_login.extra_data['refresh_token'] # Strava Refresh token
+    expires = strava_login.extra_data['expires'] 
+    
     activites_url = "https://www.strava.com/api/v3/athlete/activities"
+    
+    myUser_sq = Strava_user.objects.all().filter(strava_user = user)
 
+    if myUser_sq.count() == 0:
+        myUser = Strava_user()
+        myUser.last_name = user
+        myUser.first_name = user
+        myUser.token_type = token_type
+        myUser.access_token = access_token
+        myUser.refresh_token = refresh_token
+        myUser.strava_user = user
+        myUser.expire_at = expires
+        myUser.save()
+    else:
+        for oneOk in myUser_sq:
+            myUser = oneOk
+            myUser.access_token = access_token
+            myUser.refresh_token = refresh_token
+            myUser.expire_at = expires
+            myUser.save()
+    
+    
     # Get activity data
     header = {'Authorization': 'Bearer ' + str(access_token)}
     
     activity_df_list = []
 
-    ########################################################
-    # 1st june 2023     -   1685577600
-    ########################################################
-
-    param = {'after': 1685577600, "per_page": 200}
+    select_max_act_date = Activity.objects.all().aggregate(Max('act_start_date'))
+    ze_date = select_max_act_date["act_start_date__max"]
+    ze_epoc = int(ze_date.timestamp())
+    un_d_epoc = 86400
+    un_jour_avant = ze_epoc - un_d_epoc
+    
+    param = {'after': un_jour_avant , "per_page": 200}
+    #param = {}
+    
     activities_json = requests.get(activites_url, headers=header, params=param).json()
-            
+                
     ########################
     #   Last 100 activities
     ########################
@@ -108,7 +139,7 @@ def connected_map(request):
     activities_df['polylines'] = activities_df['map.summary_polyline'].apply(polyline.decode)
 
     conn = create_connection('db.sqlite3')
-    myColsList =  select_all_cols06(conn)        
+    myColsList =  select_all_cols(conn,get_default_departement())        
             
     for ligne in range(len(activities_df)):
         AllVisitedCols = []
@@ -121,8 +152,8 @@ def connected_map(request):
         sport_type = activities_df['sport_type'][ligne]
         act_time = int(activities_df['moving_time'][ligne])
         act_power = activities_df['average_watts'][ligne]
-        act_status = 0 # not analyzed
-        strava_user = 366232
+        act_status = 1 # not analyzed
+        strava_user = get_strava_user_id()
 
         ########## Delete / Insert ###############
         # insert activities and col for each one
@@ -142,14 +173,10 @@ def connected_map(request):
         returnList = ct.getColsVisited(myColsList,myGPSPoints)       
         
         for ligne in returnList:                
-            AllVisitedCols.append(ligne)
-            print(ligne)                
-        #print(activity_name)
-        #for ligne in AllVisitedCols:                
-        #    print(ligne)
-
+            AllVisitedCols.append(ligne)            
+                
         insert_col_perform(conn,strava_id, AllVisitedCols)
-        compute_cols(strava_user,strava_id)
+        compute_cols_by_act(conn,strava_user,strava_id)
                     
     # Plot Polylines onto Folium Map
     for pl in activities_df['polylines']:
@@ -163,27 +190,6 @@ def connected_map(request):
     }
         
     return render(request, 'index.html', context)
-
-# from django.shortcuts import render, redirect
-# from django.http import HttpResponse
-# import folium
-#
-# # Create your views here.
-#
-#
-# def main_map(request):
-#     # Create Map Object
-#     main_map = folium.Map(location=[19, -12], zoom_start=2)
-#
-#     # folium.Marker([39.09616, -117.80612], tooltip='Click for more',
-#     #               popup='United States').add_to(main_map)
-#     # Get HTML Representation of Map Object
-#     main_map = main_map._repr_html_()
-#     context = {
-#         'main_map': main_map,
-#         'form': 'potato',
-#     }
-#     return render(request, 'index.html', context)
 
 
 def index(request):
@@ -202,6 +208,122 @@ def index(request):
     # Render the HTML template index.html with the data in the context variable
     return render(request, 'index.html', context)
 
+def col_map(request, col_id):
+
+    conn = create_connection('db.sqlite3')
+    myColsList =  getCol(conn,col_id)     
+    
+    
+    for oneCol in myColsList:
+        myCol = ct.PointCol()
+        myCol.setPoint(oneCol)
+        col_location = [myCol.lat,myCol.lon]
+        colColor = "blue"
+        map = folium.Map(col_location, zoom_start=15)
+        folium.Marker(col_location, popup=myCol.name,icon=folium.Icon(color=colColor, icon="flag")).add_to(map)      
+
+    map_html = map._repr_html_()
+    
+    context = {
+        "main_map": map_html,
+        "col_id" : col_id,        
+    }
+        
+    return render(request, 'index.html', context)
+
+def act_map(request, act_id):
+
+    ct.refresh_access_token()
+
+    myActivity_sq = Activity.objects.all().filter(act_id = act_id)
+
+    USER = get_strava_user()
+    userList = Strava_user.objects.all().filter(strava_user = USER)
+    for userOne in userList:
+            myUser = userOne
+            access_token = myUser.access_token                
+
+    for myActivity in myActivity_sq:            
+            strava_id =  myActivity.strava_id
+            act_statut = myActivity.act_status
+                    
+    activites_url = "https://www.strava.com/api/v3//activities/"+str(strava_id)
+    
+    # Get activity data
+    header = {'Authorization': 'Bearer ' + str(access_token)}            
+    param = {'id': strava_id}
+    
+    activities_json = requests.get(activites_url, headers=header, params=param).json()
+    activity_df_list = []
+       
+    activity_df_list.append(pd.json_normalize(activities_json))
+    
+    # Get Polyline Data
+    activities_df = pd.concat(activity_df_list)        
+        
+    activities_df = activities_df.dropna(subset=['map.summary_polyline'])
+    
+    activities_df['polylines'] = activities_df['map.summary_polyline'].apply(polyline.decode)
+    
+    # Centrage de la carte
+                       
+    centrer_point = ct.map_center(activities_df['polylines'])           
+    map_zoom = ct.map_zoom(centrer_point,activities_df['polylines'])    
+    
+    map = folium.Map(location=centrer_point, zoom_start=map_zoom)
+                                           
+    # Plot Polylines onto Folium Map
+
+    myGPSPoints = []
+    
+    for pl in activities_df['polylines']:
+        if len(pl) > 0: # Ignore polylines with length zero (Thanks Joukesmink for the tip)
+            folium.PolyLine(locations=pl, color='red').add_to(map)                
+            myPoint = ct.PointGPS()                
+            myPoint = pl                            
+            myGPSPoints.append(myPoint)
+
+
+    ## Col Display
+    conn = create_connection('db.sqlite3')
+    myColsList =  getColByActivity(conn,strava_id)     
+    
+    
+    for oneCol in myColsList:
+        myCol = ct.PointCol()
+        myCol.setPoint(oneCol)
+        col_location = [myCol.lat,myCol.lon]
+        colColor = "blue"        
+        folium.Marker(col_location, popup=myCol.name,icon=folium.Icon(color=colColor, icon="flag")).add_to(map)      
+        ##### Count Update #####
+                   
+            
+    # Return HTML version of map
+    map_html = map._repr_html_() # Get HTML for website
+    context = {
+        "main_map":map_html        
+    }
+
+    strava_user = get_strava_user_id()
+
+    ## Check col passed new
+    if act_statut == 0:
+        recompute_activity(strava_id, activities_df,strava_user)
+                    
+    return render(request, 'index.html', context)
+
+
+def act_map_by_col(request,col_id,act_id):
+    print("col_id = ",col_id)        
+    return  act_map(request, act_id)
+
+def col_map_by_act(request,act_id,col_id):
+    print("act_id = ",act_id)        
+    #return HttpResponse("You're looking at question")
+    return  col_map(request, col_id)
+
+##########################################################################
+
 from django.views import generic
 
 class ColsListView(generic.ListView):    
@@ -214,8 +336,7 @@ class Cols06ListView(generic.ListView):
     
 class Cols06okListView(generic.ListView):        
     def get_queryset(self):                
-        qsOk = Col_counter.objects.all().order_by("-col_count")
-                                                           
+        qsOk = Col_counter.objects.all().order_by("-col_count")                                                           
         return qsOk
     
 class Cols06koListView(generic.ListView):        
@@ -234,32 +355,20 @@ class ActivityListView(generic.ListView):
     def get_queryset(self):                
         return Activity.objects.all().order_by("-act_start_date")
     
-class ActivityDetailView(generic.DetailView):                   
+class ActivityDetailView(generic.DetailView):                       
     model = Activity        
-   
-    """        
-    
-    def get_object(self, queryset=None):                
-        strava_id = self.kwargs.get('strava_id') or self.request.GET.get('strava_id') or None                
-        myObject = Activity.objects.filter(strava_id=strava_id)                 
-        print("CLASSE = ", type(myObject))   
-        print("act_name = ", myObject[0].act_name)         
-        print("strava_id = ", myObject[0].strava_id)         
-        print("act_type = ", myObject[0].act_type)                 
-                        
-        return myObject
-        
-    
-    
-    def get_context_data(self, **kwargs):
-        context = super(ActivityDetailView, self).get_context_data(**kwargs)
-        selected_Strava_id = self.kwargs.get('strava_id')        
-        context['strava_id'] = selected_Strava_id
-        print("get_context_data = ", selected_Strava_id)        
-        self.get_queryset().filter(strava_id=selected_Strava_id)
-        return context
-    """    
-                                     
+                                                                        
 class ColsDetailView(generic.DetailView):
 	# specify the model to use    
-	model = Col    
+    model = Col    
+    
+
+
+
+
+ 
+    
+    
+    
+    
+    

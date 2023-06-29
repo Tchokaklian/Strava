@@ -14,20 +14,20 @@
     <div class="row">
       <div class="col-sm-2">
           {% block sidebar %}
-          {% load static %} <img src="{% static '/image/124_club-des-cent-cols.png' %}"  />
-           <ul class="sidebar-nav">                           
+          {% load static %} <a href="{% url 'index' %}"><img src="{% static '/image/124_club-des-cent-cols.png' %}"  /></a>
+                    
+           <ul class="sidebar-nav">                                                   
             <li><a href="{% url 'activity' %}">Liste des activités</a></li>                   
             <li><a href="{% url 'cols' %}">Tous les Cols</a></li>               
-            <li><a href="{% url 'cols06' %}">Tous les Cols 06</a></li>            
+            <li><a href="{% url 'cols06' %}">Cols des Alpes-Maritimes</a></li>            
             <li><a href="{% url 'cols06ok' %}">Col des Alpes-Maritimes effectués</a></li>
-            <li><a href="{% url 'cols06ko' %}">Col des Alpes-Maritimes Restants</a></li>                                                                    
+            <li><a href="{% url 'cols06ko' %}">Col des Alpes-Maritimes Restants</a></li>                                                                                
            </ul>
           {% endblock %}
       </div>
          <div class="col-sm-10 ">
-             {% block content %}  
-             Block generic              
-             {% endblock %}
+             {% block content %}               
+             {% endblock %}            
          </div>
     </div>
   </div>

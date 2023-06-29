@@ -1,6 +1,31 @@
 {% extends "base_generic.html" %}
 
 {% block content %}
-    <h1>{{ object.act_id }}</h1>
-    <p>{{ object.act_name }}</p>
-{% endblock %}    
+    <h1>{{ object.act_name }}</h1>
+    <p><b>Date : </b>{{ object.act_start_date }}</p>
+    <p><b>Distance : </b>{{ object.get_act_dist_km }}</p>
+    <p><b>Dénivelé : </b>{{ object.act_den }}</p>
+    <p><b>Type : </b>{{ object.act_type }}</p>
+    <p><b>Référence Strava : </b>{{ object.strava_id }}</p>
+    <!--Begin Map Container-->  
+    <a href="{% url 'Activity Map View' act_id=object.act_id %}">Voir sur la carte</a>   
+    <!--End Map Container-->    
+
+    <br>
+    <p><b>Liste des cols passés:</b></p>    
+    <br>
+
+    {% for col in object.get_col_passed %}     
+        <div class="cols">      
+            <li>            
+                {{ col.col_code }} : <a href="{{ object.act_id }}/{{ col.get_col_id }}">  {{ col.get_col_name }} </a>                         
+            </li>
+        </div>
+    {% endfor %}
+            
+    
+             
+{% endblock %}   	
+
+<!doctype html>
+ 

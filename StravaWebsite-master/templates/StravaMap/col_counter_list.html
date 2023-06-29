@@ -3,13 +3,25 @@
 {% block content %}
   <h1>Tous les cols effectués</h1>
   {% if col_counter_list %}
-  <ul>
-    {% for colc in col_counter_list %}        
-          <li>
-            <a href="{{ colc.get_absolute_url }}">{{ colc.nom_col }}</a> ( {{ colc.col_code }} ) {{colc.col_count}} fois 
-          </li>      
+  <table>
+    <tr>
+        <td><b>Nom</td></b>
+        <td><b>Code 100 Cols</td></b>          
+        <td><b>Nombre de passages</td></b>          
+    </tr>      
+    {% for colc in col_counter_list %}            
+    <tr>
+      <td>
+          <a href="{{ colc.get_col_id }}">{{ colc.get_col_name }}</a> 
+      </td>  
+      <td>
+        {{ colc.col_code }}
+      </td>
+      <td>
+        {{colc.col_count}}
+      </td>             
     {% endfor %}
-  </ul>
+  </table> 
   {% else %}
     <p>There are no Col in the Database.</p>
   {% endif %}

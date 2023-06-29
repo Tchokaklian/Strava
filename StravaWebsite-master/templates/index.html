@@ -13,8 +13,7 @@
   </head>
 
 <!--NavBar-->
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
-  <a class="navbar-brand" href="#">Carte des activités (StravaMap)</a>
+<nav class="navbar navbar-expand-lg navbar-light bg-light">  
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
   </button>
@@ -35,29 +34,30 @@
         {% block sidebar %}
         
          <ul class="sidebar-nav">    
-            {% load static %}  <img src='{% static "/image/124_club-des-cent-cols.png" %}'  />         
+            {% load static %} <a href="{% url 'index' %}"><img src="{% static '/image/124_club-des-cent-cols.png' %}"  /></a>
             <li><a href="{% url 'activity' %}">Liste des activités</a></li>                   
             <li><a href="{% url 'cols' %}">Tous les Cols</a></li>               
-            <li><a href="{% url 'cols06' %}">Tous les Cols 06</a></li>                        
+            <li><a href="{% url 'cols06' %}">Cols des Alpes-Maritimes</a></li>                        
             <li><a href="{% url 'cols06ok' %}">Col des Alpes-Maritimes effectués</a></li>
-            <li><a href="{% url 'cols06ko' %}">Col des Alpes-Maritimes Restants</a></li>                        
+            <li><a href="{% url 'cols06ko' %}">Col des Alpes-Maritimes Restants</a></li>                                    
          </ul>
         {% endblock %}
     </div>
     <div class="col-sm-10 ">
       {% block content %}      
       <!--Begin Map Container-->
-        <div class="container">
+        <div class="my_container">
           <div class="row mt-4">            
               <div class="col-md-10 offset-md-1">
                   {{ main_map|safe }}
-              </div>
+              </div>              
           </div>
         </div>
       <!--End Map Container-->
       {% endblock %}
-    </div>
-  </div>
+     
+    </div>    
+  </div>  
 </div>
 
 </html>

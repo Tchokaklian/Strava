@@ -1,7 +1,7 @@
 from aifc import Error
 import sqlite3
 from StravaMap import cols_tools as ct
-from StravaMap.models import Col_counter as cc, Col_perform as cp
+from StravaMap.models import Activity, Col_counter as cc, Col_perform as cp
 from django.db.models import F  
 
 
@@ -23,14 +23,20 @@ def create_connection(db_file):
 
 #############################################################################
 
-def select_all_cols06(conn):
+def select_all_cols(conn, departement):
     """
     Query all rows in the tasks table
     :param conn: the Connection object
     :return:
     """
     cur = conn.cursor()
-    cur.execute("SELECT col_name,col_alt,col_lat,col_lon,col_code FROM StravaMap_col WHERE col_code like '%FR-06%'")
+
+    if departement == "00":
+        codeSql = "SELECT col_name,col_alt,col_lat,col_lon,col_code,col_type FROM StravaMap_col"
+    else:
+        codeSql = "SELECT col_name,col_alt,col_lat,col_lon,col_code,col_type FROM StravaMap_col WHERE col_code like '%FR-"+ departement +"%'"
+
+    cur.execute(codeSql)
 
     rows = cur.fetchall()
     
@@ -42,14 +48,16 @@ def select_all_cols06(conn):
     col_lat = 2 
     col_lon = 3
     col_code = 4
+    col_type = 5
 
-    for row in rows :                               
+    for row in rows :                                      
         myCol = ct.PointCol()
         myCol.name = row[col_name]
         myCol.alt = row[col_alt]
         myCol.lat = row[col_lat]        
         myCol.lon = row[col_lon]        
         myCol.col_code = row[col_code]
+        myCol.col_type = row[col_type]        
         myListeCols.append(myCol)
                     
     return myListeCols    
@@ -95,26 +103,43 @@ def insert_col_perform(conn,act_id,rows):
 
 #############################################################################
 
-def compute_cols( myUser_id,myActivity_id):
+def compute_cols_by_act( conn, myUser_id,myActivity_id):
     
     #remove all
     #cc.objects.filter(user_id=myUser_id).delete()        
 
     #print("activity_id = ", myActivity_id)
-                
-    perf = cp.objects.filter(strava_id=myActivity_id).values_list("col_code", flat=True)
                     
-    for codeCode in perf:
-        # Update if Exists
-        nbRet = cc.objects.filter( user_id=myUser_id, col_code=codeCode).update(col_count=F('col_count')+1)       
-        # Else Insert new Col
-        if nbRet == 0:            
-            new_cc = cc()        
-            new_cc.col_code = codeCode
-            new_cc.col_count = 1
-            new_cc.user_id = myUser_id        
-            new_cc.save()      
+    perf = cp.objects.filter(strava_id=myActivity_id).values_list("col_code", flat=True)
+                        
+    for colCode in perf:        
         
+        nbPassage = getActivitiesByCol(conn,colCode)        
+
+        print(" >>>>>>>>>>>>>>>>> Col Matching !!!")
+
+        exists = cc.objects.filter(col_code=colCode, user_id=myUser_id).count()
+                
+        if exists==0:
+            new_cc = cc()
+            new_cc.col_code=colCode
+            new_cc.col_count=1
+            new_cc.user_id=myUser_id
+            new_cc.save()            
+            print(">>>>>    NEW COL    <<<<<")            
+            print(">>>>>"+new_cc.get_col_name()+"<<<<<")
+        else:
+            my_cc = cc.objects.filter(col_code=colCode, user_id=myUser_id)
+            upd_cc = my_cc[0]
+            upd_cc.col_count=nbPassage
+            upd_cc.save()
+
+        lact = Activity.objects.filter(strava_id=myActivity_id)
+        for act in lact:
+            act.act_status = 1
+            act.save()
+
+                                           
 def cols_effectue(conn):
 
     cur = conn.cursor()
@@ -123,12 +148,114 @@ def cols_effectue(conn):
 
     return rows
 
-            
-        
-        
-        
+def getCol(conn,col_id):
+    cur = conn.cursor()
+    cur.execute("SELECT col_name,col_alt,col_lat,col_lon,col_code FROM StravaMap_col WHERE col_id = "+str(col_id))
+    
+    rows = cur.fetchall()
+    
+    myListeCols = []
 
-      
+    # col indexes
+    col_name = 0
+    col_alt = 1
+    col_lat = 2 
+    col_lon = 3
+    col_code = 4
+
+    for row in rows :                               
+        myCol = ct.PointCol()
+        myCol.name = row[col_name]
+        myCol.alt = row[col_alt]
+        myCol.lat = row[col_lat]        
+        myCol.lon = row[col_lon]        
+        myCol.col_code = row[col_code]
+        myListeCols.append(myCol)
+                    
+    return myListeCols   
+
+###########################################################################################################
+
+def getColByActivity(conn,strava_id):
+    cur = conn.cursor()    
+    cur.execute("select col_name,col_alt,col_lat,col_lon,P.col_code from StravaMap_col_perform P, StravaMap_col C where P.col_code = C.col_code and strava_id = "+str(strava_id))
+        
+    rows = cur.fetchall()
+    
+    myListeCols = []
+    
+    # col indexes
+    col_name = 0
+    col_alt = 1
+    col_lat = 2 
+    col_lon = 3
+    col_code = 4
+
+    for row in rows :                               
+        myCol = ct.PointCol()
+        myCol.name = row[col_name]
+        myCol.alt = row[col_alt]
+        myCol.lat = row[col_lat]        
+        myCol.lon = row[col_lon]        
+        myCol.col_code = row[col_code]
+        myListeCols.append(myCol)
+
+        #print( myCol.name )
+                    
+    return myListeCols   
+            
+###########################################################################################################
+
+def getActivitiesByCol(conn, col_code):                
+    cur = conn.cursor()        
+    sqlExec = "select act_id from StravaMap_activity A, StravaMap_col_perform P where user_id = 366232 and A.strava_id = P.strava_id and col_code = '"+col_code+"'"
+    
+    cur.execute(sqlExec)    
+    rows = cur.fetchall()    
+    myListActivities = 0
+        
+    for row in rows :                        
+        #TODO -        
+        myListActivities = myListActivities+1
+
+    #print("col_code", myListActivities)        
+                            
+    return myListActivities   
+
+###########################################################################################################
+
+def recompute_activity(strava_id, activities_df, strava_user):        
+
+    conn = create_connection('db.sqlite3')
+
+    AllVisitedCols = []
+    allCols = []
+    myColsList = []
+    myGPSPoints = []
+
+    allCols=  select_all_cols(conn,"00")            
+    
+    for oneCol in allCols:               
+        myCol = ct.PointCol()
+        myCol.setPoint(oneCol)        
+        myColsList.append(myCol)
+    
+    for pl in activities_df['polylines']:
+            if len(pl) > 0:                 
+                for onePoint in pl:                    
+                    myGPSPoints.append(onePoint)
+    
+    returnList = ct.getColsVisited(myColsList,myGPSPoints)           
+                    
+    for ligne in returnList:                
+        AllVisitedCols.append(ligne)            
+
+    delete_col_perform(conn,strava_id)                
+    insert_col_perform(conn,strava_id, AllVisitedCols)
+    compute_cols_by_act(conn,strava_user,strava_id)  
+
+    
+    return 0
         
     
 

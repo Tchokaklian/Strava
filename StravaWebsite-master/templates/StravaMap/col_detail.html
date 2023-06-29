@@ -1,15 +1,36 @@
 {% extends "base_generic.html" %}
 
 {% block content %}
-    <h1>{{ object.col_name }}</h1>    
+    
+    <h1>{{ object.col_name }}</h1>        
     <p> <b>Altitude : </b>{{ object.col_alt }} m</p>
     <p> <b>Code cent cols : </b>{{ object.col_code }}</p>
     <p> <b>Lat/Lon : </b>{{ object.col_lat }} / {{ object.col_lon }}</p>
-
+    
     <!--Begin Map Container-->  
-           Hello World !   
-        {{ col_map|safe }}               
+    <a href="{% url 'Col Map View' col_id=object.col_id %}">Voir sur la carte</a>    
     <!--End Map Container-->    
+    <br><br>
+    
+    <p> <b>Activités:</b> </p>
+    <table>
+        <tr>
+            <td><b>Date</td></b>
+            <td><b>Titre</td></b>          
+        </tr>
+
+    {% for activity in object.get_activities_passed %}   
+        <div class="activities">                                     
+            <tr>
+                <td>{{ activity.get_activity_date|date:"d-M-Y" }}</td>
+                <td>
+                    <a href={{activity.get_activity_id}}>  {{ activity.get_activity_name }}</a>                
+                </td>
+            </tr>
+        </div>
+    {% endfor %}    
+    </table>
 {% endblock %}  
+
 
 <!doctype html>
