@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 
     <title>StravaMap</title>
+  
   </head>
 
 <!--NavBar-->
@@ -28,20 +29,30 @@
 </nav>
 <!--End NavBar-->
 
-<div class="container-fluid">
+<div class="container-fluid">  
   <div class="row">
     <div class="col-sm-2">
         {% block sidebar %}
         
          <ul class="sidebar-nav">    
             {% load static %} <a href="{% url 'index' %}"><img src="{% static '/image/124_club-des-cent-cols.png' %}"  /></a>
+
+
             <li><a href="{% url 'activity' %}">Liste des activités</a></li>                   
             <li><a href="{% url 'cols' %}">Tous les Cols</a></li>               
-            <li><a href="{% url 'cols06' %}">Cols des Alpes-Maritimes</a></li>                        
-            <li><a href="{% url 'cols06ok' %}">Col des Alpes-Maritimes effectués</a></li>
+            <li><a href="{% url 'colsok' %}">Cols effectués</a></li>
+            <li><a href="{% url 'cols06' %}">Cols des Alpes-Maritimes</a></li>                                    
             <li><a href="{% url 'cols06ko' %}">Col des Alpes-Maritimes Restants</a></li>                                    
+            <li><a href="{% url 'cols06ko' %}">Dashboard</a></li>                                    
+            <li><a href="{% url 'cols04' %}">Cols des Alpes de Haute Provence</a></li>
+            <li><a href="{% url 'cols07' %}">Cols Ardéchois</a></li>                                    
+            <li><a href="{% url 'cols26' %}">Cols Drômois</a></li>
+            <li><a href="{% url 'cols38' %}">Cols Isèrois</a></li>
+            <li><a href="{% url 'cols83' %}">Cols du Var</a></li>
+            <li><a href="{% url 'cols_it_im' %}">Cols Ligures (IT)</a></li>
          </ul>
         {% endblock %}
+
     </div>
     <div class="col-sm-10 ">
       {% block content %}      

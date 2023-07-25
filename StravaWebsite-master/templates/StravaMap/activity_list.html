@@ -3,13 +3,32 @@
 {% block content %}
   <h1>Liste des activités</h1>
   {% if activity_list %}
-  <ul>
+  <table width="100%">
+    <tr>
+        <td align="center"><b>Date</td></b>
+        <td align="center"><b>Distance</td></b>          
+        <td align="center"><b>Dénivelé</td></b>          
+        <td align="left"><b>Activité</td></b>          
+    </tr>    
+  
     {% for activity in activity_list %}      
-      <li>
-        {{activity.act_start_date|date:"d-M-Y" }} - <a href={{activity.act_id}}>{{ activity.act_name }}</a> - {{activity.get_act_dist_km|floatformat:2}} km - {{activity.act_den}}m        
-      </li>
+      <tr>
+        <td style="width:8%">
+          {{activity.act_start_date|date:"d-M-Y" }} 
+        </td>  
+        <td align="right">
+          {{activity.get_act_dist_km|floatformat:2}} 
+        </td>  
+        <td align="right" style="width:5%">
+          {{activity.act_den|floatformat:0}}   
+        </td>
+        <td>
+          &nbsp; &nbsp;
+          <a href={{activity.act_id}}> {{ activity.act_name }}</a> 
+        </td>  
+      </tr> 
     {% endfor %}
-  </ul>
+  </table>  
   {% else %}
     <p>There are no Col in the Database.</p>
   {% endif %}

@@ -1,8 +1,10 @@
 from aifc import Error
 import sqlite3
 from StravaMap import cols_tools as ct
-from StravaMap.models import Activity, Col_counter as cc, Col_perform as cp
-from django.db.models import F  
+from StravaMap.models import Activity, Col_counter as cc, Col_perform as cp, Region, User_var
+from django.db.models import F
+
+from StravaMap.vars import get_default_country  
 
 
 #############################################################################
@@ -23,19 +25,24 @@ def create_connection(db_file):
 
 #############################################################################
 
-def select_all_cols(conn, departement):
+def select_all_cols(conn, region_info):
     """
     Query all rows in the tasks table
     :param conn: the Connection object
     :return:
     """
     cur = conn.cursor()
+    
+    country = region_info[0][0:2]
+    departement = region_info[1]
 
     if departement == "00":
         codeSql = "SELECT col_name,col_alt,col_lat,col_lon,col_code,col_type FROM StravaMap_col"
     else:
-        codeSql = "SELECT col_name,col_alt,col_lat,col_lon,col_code,col_type FROM StravaMap_col WHERE col_code like '%FR-"+ departement +"%'"
+        codeSql = "SELECT col_name,col_alt,col_lat,col_lon,col_code,col_type FROM StravaMap_col WHERE col_code like '%"+ country + "-"+ departement +"%'"
 
+    print(codeSql)        
+    
     cur.execute(codeSql)
 
     rows = cur.fetchall()
@@ -257,7 +264,29 @@ def recompute_activity(strava_id, activities_df, strava_user):
     
     return 0
         
+###########################################################################################################
     
+def update_user_var(strava_user, region):        
+    my_user_var_sq = User_var.objects.all().filter(strava_user = strava_user)
+
+    for oneOk in my_user_var_sq:
+            myUser_var = oneOk
+            myUser_var.view_region_id = region
+            myUser_var.save()
+
+def get_user_region_view(strava_user):    
+    my_user_var_sq = User_var.objects.all().filter(strava_user = strava_user)    
+    view_region_code = "00"
+    for oneOk in my_user_var_sq:
+            myUser_var = oneOk
+            view_region_id = myUser_var.view_region_id                                    
+            region_sq = Region.objects.all().filter(region_id = view_region_id)
+            for oneReg in region_sq:
+                the_region = oneReg
+                view_region_code = the_region.region_code   
+                view_country_code = the_region.country_code                                         
+    region_info = [view_country_code,view_region_code]            
+    return region_info
 
 
 

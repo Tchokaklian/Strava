@@ -3,13 +3,27 @@ from numpy import generic
 
 # Create your models here.
 
+class Country(models.Model):			
+	country_code = models.CharField(max_length=3, primary_key=True)
+	country_name = models.CharField(max_length=50)
+	country_lat = models.FloatField(null=True)
+	country_lon = models.FloatField(null=True)
+
+class Region(models.Model):			
+	region_id = models.IntegerField(auto_created=True,  primary_key=True)
+	region_name = models.CharField(max_length=50)
+	region_code = models.CharField(max_length=50,null=True, default="")
+	country_code = models.CharField(max_length=3, null=False, default="")	
+	region_lat = models.FloatField(null=True)
+	region_lon = models.FloatField(null=True)	
+	
 class Col(models.Model):		
 	col_id = models.IntegerField(auto_created=True,  primary_key=True)
 	col_name = models.CharField(max_length=200)
 	col_code = models.CharField(max_length=20, null=True, unique=True)
-	col_alt = models.IntegerField(null=True)
-	col_lon = models.FloatField(null=True)
+	col_alt = models.IntegerField(null=True)	
 	col_lat = models.FloatField(null=True)
+	col_lon = models.FloatField(null=True)
 	col_type = models.CharField(max_length=10, null= True)	
 
 	def get_activities_passed(self):
@@ -70,6 +84,16 @@ class Col_perform(models.Model):
 		sc = self.strava_id
 		q1 = Activity.objects.filter(strava_id=sc)			
 		return q1[0].act_start_date
+	
+	def get_activity_dist(self):		
+		sc = self.strava_id
+		q1 = Activity.objects.filter(strava_id=sc)			
+		return int(q1[0].act_dist/1000)
+	
+	def get_activity_den(self):		
+		sc = self.strava_id
+		q1 = Activity.objects.filter(strava_id=sc)			
+		return q1[0].act_den
 
 class Col_counter(models.Model):
 	col_count_id = models.IntegerField(auto_created=True,  primary_key=True)
@@ -100,3 +124,8 @@ class Strava_user(models.Model):
 	city = models.CharField(max_length=50, null=True)
 	country = models.CharField(max_length=50, null=True)
 	sex = models.CharField(max_length=100, null=True)
+
+class User_var(models.Model):				
+	strava_user = models.CharField(max_length=100, primary_key=True, default="-") 
+	strava_user_id = models.IntegerField(null=True)
+	view_region_id = models.IntegerField(null=True)

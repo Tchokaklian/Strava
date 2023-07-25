@@ -8,29 +8,40 @@
     <p> <b>Lat/Lon : </b>{{ object.col_lat }} / {{ object.col_lon }}</p>
     
     <!--Begin Map Container-->  
-    <a href="{% url 'Col Map View' col_id=object.col_id %}">Voir sur la carte</a>    
+     
+     {% load static %} <a href="{% url 'Col Map View' col_id=object.col_id %}"><img src="{% static '/image/map.png' %}"  /> Voir sur la carte</a>    
     <!--End Map Container-->    
     <br><br>
-    
+        
     <p> <b>Activités:</b> </p>
     <table>
         <tr>
             <td><b>Date</td></b>
-            <td><b>Titre</td></b>          
+            <td><b>Activité</td></b>         
+            <td><b>Distance</td></b>          
+            <td><b>Dénivelé</td></b>           
         </tr>
 
+        
     {% for activity in object.get_activities_passed %}   
         <div class="activities">                                     
             <tr>
                 <td>{{ activity.get_activity_date|date:"d-M-Y" }}</td>
                 <td>
-                    <a href={{activity.get_activity_id}}>  {{ activity.get_activity_name }}</a>                
+                    <a href={{activity.get_activity_id}}>  {{ activity.get_activity_name }}</a> 
+                </td>
+                <td>
+                    {{ activity.get_activity_dist }} km 
+                </td>
+                <td>
+                    {{ activity.get_activity_den }} m
                 </td>
             </tr>
         </div>
     {% endfor %}    
     </table>
 {% endblock %}  
+
 
 
 <!doctype html>

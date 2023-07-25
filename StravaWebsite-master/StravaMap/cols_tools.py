@@ -132,8 +132,9 @@ def map_center(listePoint= PointGPS() ):
                 i=i+1
                 sum_x = sum_x + unPt[0]
                 sum_y = sum_y + unPt[1]
-        sum_x = sum_x/i                                                      
-        sum_y = sum_y/i                                                      
+        if i > 0:                 
+            sum_x = sum_x/i                                                      
+            sum_y = sum_y/i                                                      
         
         return [sum_x,sum_y]
 

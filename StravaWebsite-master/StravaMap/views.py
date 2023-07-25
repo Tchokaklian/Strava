@@ -3,32 +3,30 @@ import folium
 import requests
 import pandas as pd
 import polyline
-from StravaMap.models import Activity
+from StravaMap.models import Activity, User_var
 from StravaMap.models import Col
 from StravaMap.models import Col_counter
 from StravaMap.models import Strava_user
 from StravaMap import cols_tools as ct
 from StravaMap.col_dbtools import *
-from StravaMap.vars import get_default_departement, get_map_center, get_strava_user, get_strava_user_id
+from StravaMap.vars import get_map_center, get_strava_user, get_strava_user_id
 from django.db.models import Max
 
-# Create your views here.
 
 ###################################################################
 #   Base Map
 ###################################################################
 
 def base_map(request):
-                    
+                              
     # Make your map object
     main_map = folium.Map(location=get_map_center(), zoom_start = 6) # Create base map
 
     conn = create_connection('db.sqlite3')    
     
-    feature_group_1000m = folium.FeatureGroup(name="Entre 0 et 1000 m").add_to(main_map)    
-    feature_group_2000m = folium.FeatureGroup(name="Entre 1000 et 2000 m").add_to(main_map)    
-    feature_group_3000m = folium.FeatureGroup(name="Au dessus de 2000 m").add_to(main_map)  
-        
+    feature_group_road = folium.FeatureGroup(name="Route").add_to(main_map)    
+    feature_group_piste = folium.FeatureGroup(name="Piste").add_to(main_map)    
+            
     folium.LayerControl().add_to(main_map)
 
     # Les cols passés
@@ -37,8 +35,10 @@ def base_map(request):
     for oneCol in colOK:        
         listeOK.append(oneCol[3])   # col_code
         
-    # Tous les cols        
-    myColsList =  select_all_cols(conn,get_default_departement())         
+    # Tous les cols            
+    view_region_info =  get_user_region_view(get_strava_user())        
+    myColsList =  select_all_cols(conn,view_region_info)
+                
     # Plot Cols onto Folium Map
     for oneCol in myColsList:
         myCol = ct.PointCol()
@@ -49,13 +49,11 @@ def base_map(request):
             colColor = "green"
 
         # Altitude
-        if  myCol.alt < 1000:            
-            folium.Marker(location, popup=myCol.name,icon=folium.Icon(color=colColor, icon="flag")).add_to(feature_group_1000m)        
-        if  myCol.alt > 999 and myCol.alt < 2000 :            
-            folium.Marker(location, popup=myCol.name,icon=folium.Icon(color=colColor, icon="flag")).add_to(feature_group_2000m)        
-        if  myCol.alt > 1999 :            
-            folium.Marker(location, popup=myCol.name,icon=folium.Icon(color=colColor, icon="flag")).add_to(feature_group_3000m)        
-
+        if  myCol.col_type == "R":            
+            folium.Marker(location, popup=myCol.name,icon=folium.Icon(color=colColor, icon="flag")).add_to(feature_group_road)        
+        if  myCol.col_type == "P":            
+            folium.Marker(location, popup=myCol.name,icon=folium.Icon(color=colColor, icon="flag")).add_to(feature_group_piste)        
+        
     
     main_map_html = main_map._repr_html_() # Get HTML for website
 
@@ -94,6 +92,7 @@ def connected_map(request):
         myUser.strava_user = user
         myUser.expire_at = expires
         myUser.save()
+        
     else:
         for oneOk in myUser_sq:
             myUser = oneOk
@@ -101,8 +100,14 @@ def connected_map(request):
             myUser.refresh_token = refresh_token
             myUser.expire_at = expires
             myUser.save()
-    
-    
+
+    my_user_var_sq = User_var.objects.all().filter(strava_user = user)
+
+    if my_user_var_sq.count() == 0:
+        my_user_var = User_var()
+        my_user_var.strava_user = user
+        my_user_var.save()
+            
     # Get activity data
     header = {'Authorization': 'Bearer ' + str(access_token)}
     
@@ -139,7 +144,7 @@ def connected_map(request):
     activities_df['polylines'] = activities_df['map.summary_polyline'].apply(polyline.decode)
 
     conn = create_connection('db.sqlite3')
-    myColsList =  select_all_cols(conn,get_default_departement())        
+    myColsList =  select_all_cols(conn,"00")        
             
     for ligne in range(len(activities_df)):
         AllVisitedCols = []
@@ -327,14 +332,70 @@ def col_map_by_act(request,act_id,col_id):
 from django.views import generic
 
 class ColsListView(generic.ListView):    
-    def get_queryset(self):
+    def get_queryset(self):        
         return Col.objects.order_by("col_alt")
+    
+
+# Haute Provence
+    
+class Cols04ListView(generic.ListView):    
+    def get_queryset(self):        
+        region_id = 4
+        update_user_var(get_strava_user(),region_id)
+        return Col.objects.filter(col_code__icontains='FR-04').order_by("col_alt")    
+
+# Alpes Maritimes
 
 class Cols06ListView(generic.ListView):    
-    def get_queryset(self):
+    def get_queryset(self):        
+        region_id = 1
+        update_user_var(get_strava_user(),region_id)
         return Col.objects.filter(col_code__icontains='FR-06').order_by("col_alt")
     
-class Cols06okListView(generic.ListView):        
+# Ardèche
+
+class Cols07ListView(generic.ListView):    
+    def get_queryset(self):        
+        region_id = 2
+        update_user_var(get_strava_user(),region_id)
+        return Col.objects.filter(col_code__icontains='FR-07').order_by("col_alt")
+    
+# Drôme
+
+class Cols26ListView(generic.ListView):            
+    def get_queryset(self):                    
+        region_id = 3
+        update_user_var(get_strava_user(),region_id)
+        return Col.objects.filter(col_code__icontains='FR-26').order_by("col_alt")    
+
+# Isère
+    
+class Cols38ListView(generic.ListView):            
+    def get_queryset(self):                    
+        region_id = 17
+        update_user_var(get_strava_user(),region_id)
+        return Col.objects.filter(col_code__icontains='FR-38').order_by("col_alt")        
+
+# Var
+    
+class Cols83ListView(generic.ListView):            
+    def get_queryset(self):                    
+        region_id = 30
+        update_user_var(get_strava_user(),region_id)
+        return Col.objects.filter(col_code__icontains='FR-83').order_by("col_alt")            
+
+# Imperia    
+class Cols_it_imListView(generic.ListView):            
+    def get_queryset(self):                    
+        region_id = 32
+        update_user_var(get_strava_user(),region_id)
+        return Col.objects.filter(col_code__icontains='IT-IM').order_by("col_alt")                
+    
+# more ...
+# 
+#     
+
+class ColsOkListView(generic.ListView):        
     def get_queryset(self):                
         qsOk = Col_counter.objects.all().order_by("-col_count")                                                           
         return qsOk
@@ -362,7 +423,6 @@ class ColsDetailView(generic.DetailView):
 	# specify the model to use    
     model = Col    
     
-
 
 
 
