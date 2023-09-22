@@ -2,30 +2,45 @@
 
 {% block content %}
     <h1>{{ object.act_name }}</h1>
-    <p><b>Date : </b>{{ object.act_start_date }}</p>
-    <p><b>Distance : </b>{{ object.get_act_dist_km }} Km</p>
-    <p><b>Dénivelé : </b>{{ object.act_den }} m</p>
-    <p><b>Type : </b>{{ object.act_type }}</p>
-    <p><b>Référence Strava : </b>{{ object.strava_id }}</p>    
-    <!--Begin Map Container-->  
-     
-    {% load static %}  <a href="{% url 'Activity Map View' act_id=object.act_id %}" ><img src="{% static '/image/map.png' %}"  />Voir sur la carte</a>   
-    <!--End Map Container-->    
-    <br>
-    <br>
-    <p><b>Liste des cols passés:</b></p>    
+    {{ object.act_type }}
+    ( Strava = {{ object.strava_id }} )
+    <br>         
+    {{ object.act_start_date|date:"d M Y" }}
+    <br> 
+    {{ object.get_act_dist_km|floatformat:2 }} km
+    <br> 
+    {{ object.act_den }} m                               
+    <br>               
+    <br>               
+    {% if object.get_col_passed  %}
+        Nombre de Cols passés: {{ object.get_col_passed|length }}
+    {% endif %}
+    <br>               
+    {%  for col in object.get_col_passed %}     
     
-    {% for col in object.get_col_passed %}     
         <div class="cols">      
+                
             <li>            
                 {{ col.col_code }} : <a href="{{ object.act_id }}/{{ col.get_col_id }}">  {{ col.get_col_name }} </a>                         
             </li>
         </div>
     {% endfor %}
+
+    <br>
+            
+    <iframe        
+        width="1000"
+        height="600"
+        frameborder=0
+        src="{% url 'Activity Map View' act_id=object.act_id %}"
+        >
+    </iframe>        
             
     
              
 {% endblock %}   	
+
+
 
 <!doctype html>
  

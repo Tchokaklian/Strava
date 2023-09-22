@@ -32,17 +32,14 @@ def select_all_cols(conn, region_info):
     :return:
     """
     cur = conn.cursor()
-    
-    country = region_info[0][0:2]
-    departement = region_info[1]
 
-    if departement == "00":
+    if region_info == "00":
         codeSql = "SELECT col_name,col_alt,col_lat,col_lon,col_code,col_type FROM StravaMap_col"
     else:
+        country = region_info[0][0:2]
+        departement = region_info[1]
         codeSql = "SELECT col_name,col_alt,col_lat,col_lon,col_code,col_type FROM StravaMap_col WHERE col_code like '%"+ country + "-"+ departement +"%'"
-
-    print(codeSql)        
-    
+        
     cur.execute(codeSql)
 
     rows = cur.fetchall()

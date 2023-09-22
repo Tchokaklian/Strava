@@ -305,9 +305,11 @@ def act_map(request, act_id):
             
     # Return HTML version of map
     map_html = map._repr_html_() # Get HTML for website
+    
     context = {
         "main_map":map_html        
     }
+
 
     strava_user = get_strava_user_id()
 
@@ -315,7 +317,7 @@ def act_map(request, act_id):
     if act_statut == 0:
         recompute_activity(strava_id, activities_df,strava_user)
                     
-    return render(request, 'index.html', context)
+    return render(request,"base_map.html", context)
 
 
 def act_map_by_col(request,col_id,act_id):
