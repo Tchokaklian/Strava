@@ -10,8 +10,7 @@ urlpatterns = [
     path('connected/', connected_map, name='Connect Map View'),                                       
     path('index/',base_map,name='index'),
     path('col_map/<int:col_id>', col_map, name = 'Col Map View'),
-    path('act_map/<int:act_id>', act_map, name = 'Activity Map View'),
-    #path('act_map/<int:act_id>', act_map, name = 'Inserted Activity Map View'),
+    path('act_map/<int:act_id>', act_map, name = 'Activity Map View'),    
     ###
     path('activity/', ActivityListView.as_view(), name='activity'),        
     path('activity/<pk>', ActivityDetailView.as_view()),            
