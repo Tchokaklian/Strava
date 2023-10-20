@@ -1,14 +1,16 @@
+import json
 from django.shortcuts import render
 import folium
 import requests
 import pandas as pd
 import polyline
-from StravaMap.models import Activity, User_var
+from StravaMap.models import Activity, Perform, Segment, User_dashboard, User_var
 from StravaMap.models import Col
 from StravaMap.models import Col_counter
 from StravaMap.models import Strava_user
 from StravaMap import cols_tools as ct
 from StravaMap.col_dbtools import *
+from StravaMap.segments_tools import segment_explorer
 from StravaMap.vars import get_map_center, get_strava_user, get_strava_user_id
 from django.db.models import Max
 
@@ -213,6 +215,10 @@ def index(request):
     # Render the HTML template index.html with the data in the context variable
     return render(request, 'index.html', context)
 
+def perf(request):
+                   
+    return render(request, 'performances.html')
+
 def col_map(request, col_id):
 
     conn = create_connection('db.sqlite3')
@@ -273,11 +279,30 @@ def act_map(request, act_id):
     # Centrage de la carte
                        
     centrer_point = ct.map_center(activities_df['polylines'])           
+
+    # Recherche des Segments
+    myRectangle = ct.get_map_rectangle(activities_df['polylines'])
+    segment_explorer(myRectangle, access_token, strava_id)
+                             
+    # Zoom
     map_zoom = ct.map_zoom(centrer_point,activities_df['polylines'])    
     
     map = folium.Map(location=centrer_point, zoom_start=map_zoom)
-                                           
-    # Plot Polylines onto Folium Map
+                                               
+    #   kw = {
+    #   "color": "blue",
+    #   "line_cap": "round",
+    #   "fill": True,
+    #   "fill_color": "red",
+    #   "weight": 5,
+    #   "popup": "Mon rectangle",
+    #   "tooltip": "<strong>Click me!</strong>",
+    #   }        
+    #   folium.Rectangle(bounds=[[myRectangle[0],myRectangle[1]],[myRectangle[2],myRectangle[3]]],line_join="round",dash_array="5, 5",**kw,).add_to(map)
+
+    ###############################################
+    #   Plot Polylines onto Folium Map
+    ###############################################
 
     myGPSPoints = []
     
@@ -424,13 +449,28 @@ class ActivityDetailView(generic.DetailView):
 class ColsDetailView(generic.DetailView):
 	# specify the model to use    
     model = Col    
-    
 
-
-
- 
+class User_dashboardView(generic.ListView):	
+    def get_queryset(self):                
+        # Delete/Insert
+        # TODO filtter by user
+        User_dashboard.objects.all().delete()
+        myUd = User_dashboard()
+        myUd.col_count = 0
+        myUd.col2000_count = 0
+        myUd.bike_year_km = 0        
+        myUd.run_year_km = 0
+        myUd.save()
+        myQs = User_dashboard.objects.all()
+        return myQs
     
+class PerformListView(generic.ListView):
+    model = Perform 
+    def get_queryset(self):                
+        perfList = Perform.objects.all().order_by("-perf_vam")
+        return perfList
     
-    
-    
-    
+class SegmentListView(generic.ListView):        
+    def get_queryset(self):                
+        qsOk = Segment.objects.all()
+        return qsOk

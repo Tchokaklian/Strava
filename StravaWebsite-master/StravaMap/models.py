@@ -1,6 +1,8 @@
 from django.db import models
 from numpy import generic
 
+from StravaMap.vars import get_strava_user_id
+
 # Create your models here.
 
 class Country(models.Model):			
@@ -125,7 +127,111 @@ class Strava_user(models.Model):
 	country = models.CharField(max_length=50, null=True)
 	sex = models.CharField(max_length=100, null=True)
 
+class Segment(models.Model):	
+	segment_id = models.IntegerField(auto_created=True,  primary_key=True)
+	strava_segment_id= models.IntegerField(null=True)
+	activity_type = models.CharField(max_length=20, default="-")
+	segment_name = models.CharField(max_length=100, default="-")
+	slope =  models.FloatField(null=True)
+	lenght = models.FloatField(null=True)
+	ascent = models.FloatField(null=True)
+
+class Perform(models.Model):
+	perform_id = models.IntegerField(auto_created=True,  primary_key=True)
+	strava_perf_id = models.IntegerField(null=True)
+	segment_id = models.IntegerField(null=False)		
+	perf_date = models.DateTimeField(null=False)
+	perf_chrono = models.IntegerField(null=False)
+	perf_vam = models.IntegerField(null=False)
+	perf_fc = models.IntegerField(null=False)
+	perf_fcmax = models.IntegerField(null=False)
+
+	def get_segment_name(self):		
+		sid = self.segment_id
+		q1 = Segment.objects.filter(segment_id=sid)		
+		return q1[0].segment_name
+	
+	def get_segment_length(self):		
+		sid = self.segment_id
+		q1 = Segment.objects.filter(segment_id=sid)		
+		return q1[0].lenght
+	
+	def get_segment_slope(self):		
+		sid = self.segment_id
+		q1 = Segment.objects.filter(segment_id=sid)		
+		return q1[0].slope
+
 class User_var(models.Model):				
 	strava_user = models.CharField(max_length=100, primary_key=True, default="-") 
 	strava_user_id = models.IntegerField(null=True)
 	view_region_id = models.IntegerField(null=True)
+
+class User_dashboard(models.Model):				
+	strava_user = models.CharField(max_length=100, primary_key=True, default="-") 
+	strava_user_id = models.IntegerField(null=True)
+	col_count = models.IntegerField(null=True)
+	col2000_count = models.IntegerField(null=True)
+	bike_year_km  = models.IntegerField(null=True)
+	run_year_km  = models.IntegerField(null=True)
+
+	def set_col_count(self):	
+		nbCols = Col_counter.objects.count()		
+
+		# DB save
+		self.strava_user_id =  get_strava_user_id()
+		self.col_count = nbCols
+		self.save()
+		return nbCols
+	
+	def set_col2000_count(self):	
+		## All Col Counter 
+		## TODO need to filter by user
+
+		lcc = Col_counter.objects.all()
+		listeCC = []
+		for one_cc in lcc:
+			listeCC.append(one_cc.col_code)
+
+		## All 2000  Cols
+		q2000 = Col.objects.filter(col_alt__gt=1999)			
+		liste2000 = []
+		for one2000 in q2000:
+			liste2000.append(one2000.col_code)
+
+		### Intersection:
+		passed2000 = [value for value in liste2000 if value in listeCC]    	
+		nbCols2000 = len(passed2000)
+		
+		# DB save
+		self.col2000_count = nbCols2000
+		self.save()
+		return nbCols2000
+	
+	def set_bike_year_km(self):	
+		## All Activities 
+		## TODO need to filter by user
+
+		lActivity = Activity.objects.all().filter(act_start_date__gt="2023-01-01").filter(act_type="Ride")		
+		distance_BY = 0		
+		for one_act in lActivity:			
+			distance_BY = distance_BY + one_act.act_dist/1000			
+		
+		self.bike_year_km = int(distance_BY)
+		self.save()
+				
+		return self.bike_year_km
+	
+	def set_run_year_km(self):	
+		## All Activities 
+		## TODO need to filter by user
+
+		lActivity = Activity.objects.all().filter(act_start_date__gt="2023-01-01").filter(act_type="Run")				
+		distance_RY = 0
+		for one_act in lActivity:
+			distance_RY = distance_RY + one_act.act_dist/1000
+			
+		
+		self.run_year_km = int(distance_RY)
+		self.save()
+				
+		return self.run_year_km

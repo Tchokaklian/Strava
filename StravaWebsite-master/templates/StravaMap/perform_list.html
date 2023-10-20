@@ -1,0 +1,41 @@
+{% block content %}
+  <h3 >Liste des Performances</h3>
+  {% if perform_list %}
+  <table width="100%" >
+    <tr>
+        <td ><b>DATE</td></b>      
+        <td ><b>SEGMENT</td></b>              
+        <td ><b>LONGUEUR</td></b>              
+        <td ><b>PENTE</td></b>              
+        <td ><b>VAM</td></b>              
+        <td ><b>FC</td></b>              
+    </tr>    
+  
+    {% for perform in perform_list %}      
+      <tr>
+        <td >          
+          {{perform.perf_date|date:"d M Y" }} 
+        </td> 
+        <td >
+          {{perform.get_segment_name }}         
+        </td>                  
+        <td >
+          {{perform.get_segment_length|floatformat:1 }}         
+        </td>    
+        <td >
+          {{perform.get_segment_slope|floatformat:1 }}         
+        </td> 
+        <td >
+          {{perform.perf_vam}}         
+        </td> 
+        <td >
+          {{perform.perf_fc}}         
+        </td> 
+        
+      </tr> 
+    {% endfor %}
+  </table>  
+  {% else %}
+    <p>There are no Perf in the Database.</p>
+  {% endif %}
+{% endblock %}

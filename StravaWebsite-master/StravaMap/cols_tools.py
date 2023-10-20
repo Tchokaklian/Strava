@@ -138,6 +138,27 @@ def map_center(listePoint= PointGPS() ):
         
         return [sum_x,sum_y]
 
+def get_map_rectangle(listePoint= PointGPS() ):
+        for unElt in listePoint:
+            min_x = 200.0
+            min_y = 200.0
+            max_x = -200.0
+            max_y = -200.0
+                       
+            for unPt in unElt:   
+
+                if unPt[0] > max_x:
+                    max_x = unPt[0]
+                if unPt[1] > max_y:
+                    max_y = unPt[1]
+
+                if unPt[0] < min_x:
+                    min_x = unPt[0]
+                if unPt[1] < min_y:
+                    min_y = unPt[1]                    
+        
+        return [min_x,min_y,max_x,max_y]
+
 def map_zoom(centrerPoint, listePoint= PointGPS() ):        
         distMax = 0.0            
         myZoom = 10

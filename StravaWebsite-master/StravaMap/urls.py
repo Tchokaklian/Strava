@@ -1,5 +1,7 @@
 from django import views
 from django.urls import path, include
+
+from StravaMap.models import Segment
 from .views import *
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.generic import TemplateView
@@ -10,7 +12,7 @@ urlpatterns = [
     path('connected/', connected_map, name='Connect Map View'),                                       
     path('index/',base_map,name='index'),
     path('col_map/<int:col_id>', col_map, name = 'Col Map View'),
-    path('act_map/<int:act_id>', act_map, name = 'Activity Map View'),    
+    path('act_map/<int:act_id>', act_map, name = 'Activity Map View'),        
     ###
     path('activity/', ActivityListView.as_view(), name='activity'),        
     path('activity/<pk>', ActivityDetailView.as_view()),            
@@ -19,6 +21,8 @@ urlpatterns = [
     path('cols/', ColsListView.as_view(), name='cols'),
     path('cols/<pk>/', ColsDetailView.as_view(), name = "col-detail"),                           
     path('cols/<int:col_id>/<int:act_id>/', act_map_by_col, name = "col-act"),                           
+    ###
+    path('dashboard/', User_dashboardView.as_view(), name='userdashboard'),    
     ###
     path('cols06/', Cols06ListView.as_view(), name='cols06'),
     path('cols06/<pk>/', ColsDetailView.as_view(),name = "col-detail"),           
@@ -55,9 +59,9 @@ urlpatterns = [
     path('cols_it_im/', Cols_it_imListView.as_view(), name='cols_it_im'),
     path('cols_it_im/<pk>/', ColsDetailView.as_view(),name = "col-detail"),           
     path('cols_it_im/<int:col_id>/<int:act_id>/', act_map_by_col, name = "col-act"), 
-
-
-
+    ### SEGMENTS
+    path('segment/',SegmentListView.as_view(), name='segment'),
+    path('perform/',PerformListView.as_view(), name = 'perform'), 
         
 ]
 
