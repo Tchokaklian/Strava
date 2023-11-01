@@ -45,7 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'social_django',
     'StravaMap',
-    #"django_table_sort",
+    #'django_table_sort',
 ]
 
 MIDDLEWARE = [

@@ -1,11 +1,14 @@
-import json
+import os
+from unittest import loader
+from django.http import HttpResponse
+from django.views import generic
 from django.shortcuts import render
 import folium
 import requests
 import pandas as pd
 import polyline
 from StravaMap.models import Activity, Perform, Segment, User_dashboard, User_var
-from StravaMap.models import Col
+from StravaMap.models import Col, Country
 from StravaMap.models import Col_counter
 from StravaMap.models import Strava_user
 from StravaMap import cols_tools as ct
@@ -38,7 +41,7 @@ def base_map(request):
         listeOK.append(oneCol[3])   # col_code
         
     # Tous les cols            
-    view_region_info =  get_user_region_view(get_strava_user())        
+    view_region_info =  get_user_region_view(get_strava_user())            
     myColsList =  select_all_cols(conn,view_region_info)
                 
     # Plot Cols onto Folium Map
@@ -356,68 +359,32 @@ def col_map_by_act(request,act_id,col_id):
 
 ##########################################################################
 
-from django.views import generic
+def fColsListView(request,**kwargs):        
+            
+    code_paysregion = kwargs['pk']        
 
+    print('code_paysregion = ', code_paysregion)
+    listeCols = Col.objects.filter(col_code__icontains=code_paysregion).order_by("col_alt")
+
+    country_region = get_country_region(code_paysregion)
+           
+    update_user_var(get_strava_user(),country_region[0],country_region[1])
+        
+    template = 'cols_list.html' 
+    return render (request, template, {'col_list':listeCols})
+    
+##########################################################################    
+    
 class ColsListView(generic.ListView):    
     def get_queryset(self):        
-        return Col.objects.order_by("col_alt")
-    
-
-# Haute Provence
-    
-class Cols04ListView(generic.ListView):    
-    def get_queryset(self):        
-        region_id = 4
-        update_user_var(get_strava_user(),region_id)
-        return Col.objects.filter(col_code__icontains='FR-04').order_by("col_alt")    
-
-# Alpes Maritimes
-
-class Cols06ListView(generic.ListView):    
-    def get_queryset(self):        
-        region_id = 1
-        update_user_var(get_strava_user(),region_id)
-        return Col.objects.filter(col_code__icontains='FR-06').order_by("col_alt")
-    
-# Ardèche
-
-class Cols07ListView(generic.ListView):    
-    def get_queryset(self):        
-        region_id = 2
-        update_user_var(get_strava_user(),region_id)
-        return Col.objects.filter(col_code__icontains='FR-07').order_by("col_alt")
-    
-# Drôme
-
-class Cols26ListView(generic.ListView):            
-    def get_queryset(self):                    
-        region_id = 3
-        update_user_var(get_strava_user(),region_id)
-        return Col.objects.filter(col_code__icontains='FR-26').order_by("col_alt")    
-
-# Isère
-    
-class Cols38ListView(generic.ListView):            
-    def get_queryset(self):                    
-        region_id = 17
-        update_user_var(get_strava_user(),region_id)
-        return Col.objects.filter(col_code__icontains='FR-38').order_by("col_alt")        
-
-# Var
-    
-class Cols83ListView(generic.ListView):            
-    def get_queryset(self):                    
-        region_id = 30
-        update_user_var(get_strava_user(),region_id)
-        return Col.objects.filter(col_code__icontains='FR-83').order_by("col_alt")            
-
-# Imperia    
-class Cols_it_imListView(generic.ListView):            
-    def get_queryset(self):                    
-        region_id = 32
-        update_user_var(get_strava_user(),region_id)
-        return Col.objects.filter(col_code__icontains='IT-IM').order_by("col_alt")                
-    
+        return Col.objects.all().order_by("col_alt")
+        
+    def get_context_data(self, **kwargs):
+        context = super(ColsListView, self).get_context_data(**kwargs)
+        context['countries'] = Country.objects.all()
+        context['regions'] = Region.objects.all().order_by("region_code")  
+        return context
+              
 # more ...
 # 
 #     
@@ -445,7 +412,7 @@ class ActivityListView(generic.ListView):
     
 class ActivityDetailView(generic.DetailView):                       
     model = Activity        
-                                                                        
+                                                                            
 class ColsDetailView(generic.DetailView):
 	# specify the model to use    
     model = Col    
@@ -473,4 +440,5 @@ class PerformListView(generic.ListView):
 class SegmentListView(generic.ListView):        
     def get_queryset(self):                
         qsOk = Segment.objects.all()
-        return qsOk
+        return qsOk           
+

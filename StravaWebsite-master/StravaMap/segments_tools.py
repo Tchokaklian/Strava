@@ -71,6 +71,8 @@ def save_segment_perf(segment_id, segment_strava_id, access_token, elev_differen
     
     myDate = datetime.datetime.now().isoformat()
     
+
+    
     performance_url = "https://www.strava.com/api/v3/segment_efforts?segment_id="+ str (segment_strava_id)
     performance_url = performance_url + "&start_date_local="+"2010-10-01T00:00:30+01:00"
     performance_url = performance_url + "&end_date_local="+str(myDate)    

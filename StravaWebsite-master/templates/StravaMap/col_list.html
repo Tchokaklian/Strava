@@ -1,7 +1,8 @@
 {% extends "base_generic.html" %}
 
 {% block content %}
-  <h1>Liste des cols</h1>  
+
+  <h1>Tous les cols en base</h1>  
   {% load static %} <a href="{% url 'index' %}"><img src="{% static '/image/map.png' %}"  /> Voir sur la carte</a>   
   {% if col_list %}
   <br />

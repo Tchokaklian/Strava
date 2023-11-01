@@ -1,10 +1,12 @@
 from aifc import Error
 import sqlite3
+
+from django.urls import path
 from StravaMap import cols_tools as ct
-from StravaMap.models import Activity, Col_counter as cc, Col_perform as cp, Region, User_var
+from StravaMap.models import Activity, Col_counter as cc, Col_perform as cp, Country, Region, User_var
 from django.db.models import F
 
-from StravaMap.vars import get_default_country  
+from StravaMap.vars import get_default_country
 
 
 #############################################################################
@@ -32,6 +34,9 @@ def select_all_cols(conn, region_info):
     :return:
     """
     cur = conn.cursor()
+
+    print("region_info = ")
+    print(region_info)
 
     if region_info == "00":
         codeSql = "SELECT col_name,col_alt,col_lat,col_lon,col_code,col_type FROM StravaMap_col"
@@ -120,7 +125,7 @@ def compute_cols_by_act( conn, myUser_id,myActivity_id):
         
         nbPassage = getActivitiesByCol(conn,colCode)        
 
-        print(" >>>>>>>>>>>>>>>>> Col Matching !!!")
+        print(" >>>>> Col Matching <<<<< ")
 
         exists = cc.objects.filter(col_code=colCode, user_id=myUser_id).count()
                 
@@ -226,7 +231,7 @@ def getActivitiesByCol(conn, col_code):
                             
     return myListActivities   
 
-###########################################################################################################
+##########################################################################################################
 
 def recompute_activity(strava_id, activities_df, strava_user):        
 
@@ -257,35 +262,45 @@ def recompute_activity(strava_id, activities_df, strava_user):
     delete_col_perform(conn,strava_id)                
     insert_col_perform(conn,strava_id, AllVisitedCols)
     compute_cols_by_act(conn,strava_user,strava_id)  
-
     
     return 0
         
 ###########################################################################################################
+
+def get_country_region(code_paysregion):    
+    ### TODO    
+    country = code_paysregion[0:2]+"A"
+    region = code_paysregion[3:5]
+    country_region = []
+    country_region.append(country)
+    country_region.append(region)    
+    return country_region
+
+###########################################################################################################
     
-def update_user_var(strava_user, region):        
+def update_user_var(strava_user, country_code, region_code):        
     my_user_var_sq = User_var.objects.all().filter(strava_user = strava_user)
 
     for oneOk in my_user_var_sq:
             myUser_var = oneOk
-            myUser_var.view_region_id = region
+            myUser_var.view_country_code = country_code
+            myUser_var.view_region_code = region_code            
             myUser_var.save()
 
+###########################################################################################################            
+
 def get_user_region_view(strava_user):    
-    my_user_var_sq = User_var.objects.all().filter(strava_user = strava_user)    
-    view_region_code = "00"
-    for oneOk in my_user_var_sq:
+    my_user_var_sq = User_var.objects.all().filter(strava_user = strava_user)        
+    view_country_code = "FRA"
+    view_region_code = "06"
+    for oneOk in my_user_var_sq:            
             myUser_var = oneOk
-            view_region_id = myUser_var.view_region_id                                    
-            region_sq = Region.objects.all().filter(region_id = view_region_id)
-            for oneReg in region_sq:
-                the_region = oneReg
-                view_region_code = the_region.region_code   
-                view_country_code = the_region.country_code                                         
+            view_country_code = myUser_var.view_country_code                                                           
+            view_region_code = myUser_var.view_region_code                                                                                               
     region_info = [view_country_code,view_region_code]            
     return region_info
 
-
+###########################################################################################################
 
     
     

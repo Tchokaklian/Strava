@@ -1,3 +1,4 @@
+import datetime
 from django.db import models
 from numpy import generic
 
@@ -10,7 +11,7 @@ class Country(models.Model):
 	country_name = models.CharField(max_length=50)
 	country_lat = models.FloatField(null=True)
 	country_lon = models.FloatField(null=True)
-
+		
 class Region(models.Model):			
 	region_id = models.IntegerField(auto_created=True,  primary_key=True)
 	region_name = models.CharField(max_length=50)
@@ -86,7 +87,7 @@ class Col_perform(models.Model):
 		sc = self.strava_id
 		q1 = Activity.objects.filter(strava_id=sc)			
 		return q1[0].act_start_date
-	
+			
 	def get_activity_dist(self):		
 		sc = self.strava_id
 		q1 = Activity.objects.filter(strava_id=sc)			
@@ -164,7 +165,8 @@ class Perform(models.Model):
 class User_var(models.Model):				
 	strava_user = models.CharField(max_length=100, primary_key=True, default="-") 
 	strava_user_id = models.IntegerField(null=True)
-	view_region_id = models.IntegerField(null=True)
+	view_country_code = models.CharField(max_length=20, default="FRA")
+	view_region_code = models.CharField(max_length=20, default="06")
 
 class User_dashboard(models.Model):				
 	strava_user = models.CharField(max_length=100, primary_key=True, default="-") 
@@ -235,3 +237,4 @@ class User_dashboard(models.Model):
 		self.save()
 				
 		return self.run_year_km
+	

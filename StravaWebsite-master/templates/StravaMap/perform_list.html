@@ -1,21 +1,39 @@
+<!doctype html>
+<html lang="en">
+  
+{% load static %}
+<script src="{% static 'sortable.min.js' %}"></script>
+<link rel="stylesheet" href="{% static 'css/grid.css' %}">
+
+<head>      
+    <title>Dashboard</title>
+    <meta name="charset" content="UTF-8" />
+    <meta name="author" content="Jonas Earendel" />                        
+</head>
+
+<body>
+
 {% block content %}
+
   <h3 >Liste des Performances</h3>
   {% if perform_list %}
-  <table width="100%" >
-    <tr>
-        <td ><b>DATE</td></b>      
-        <td ><b>SEGMENT</td></b>              
-        <td ><b>LONGUEUR</td></b>              
-        <td ><b>PENTE</td></b>              
-        <td ><b>VAM</td></b>              
-        <td ><b>FC</td></b>              
-    </tr>    
-  
-    {% for perform in perform_list %}      
+  <table width="100%" class="sortable n-last" >
+    <thead>
       <tr>
-        <td >          
+        <th class="indicator-left">DATE</th>
+        <th class="indicator-left">SEGMENT</th>
+        <th class="indicator-left">LONGUEUR</th>
+        <th class="indicator-left">PENTE</th>
+        <th class="indicator-left">VAM</th>
+        <th class="indicator-left">FC</th>                  
+      </tr>    
+    </thead>
+    <tbody>
+    {% for perform in perform_list %}                
+      <tr>
+        <td data-sort={{perform.perf_date|date:"ymd"}} >                    
           {{perform.perf_date|date:"d M Y" }} 
-        </td> 
+        </td>
         <td >
           {{perform.get_segment_name }}         
         </td>                  
@@ -30,12 +48,56 @@
         </td> 
         <td >
           {{perform.perf_fc}}         
-        </td> 
-        
-      </tr> 
+        </td>         
+      </tr>     
     {% endfor %}
+  </tbody>
   </table>  
   {% else %}
     <p>There are no Perf in the Database.</p>
   {% endif %}
 {% endblock %}
+
+<script>
+  var table = document.querySelector('.massive')
+  var tbody = table.tBodies[0]
+  var rows = [].slice.call(tbody.rows, 0)
+  var fragment = document.createDocumentFragment()
+
+  for (var k = 0; k < 50; k++) {
+    for (var i = 0; i < rows.length; i++) {
+      fragment.appendChild(rows[i].cloneNode(true))
+    }
+  }
+  tbody.innerHTML = ''
+  tbody.appendChild(fragment)
+</script>
+
+<script>
+  function prepareAdvancedTable() {
+    var size_table = document.querySelector('.advanced-table')
+    var rows = size_table.tBodies[0].rows    
+    for (let i = 0; i < rows.length; i++) {
+      const date_element = rows[i].cells[2]
+      const size_element = rows[i].cells[1]
+      date_element.setAttribute('data-sort', date_element.innerText.replace(/(\d+)\/(\d+)\/(\d+)/, '$3$1$2'))
+      size_element.setAttribute('data-sort', toBytes(size_element.innerText))
+    }
+  }
+
+  function toBytes(size) {
+    const units = [, 'k', 'm', 'g', 't']
+    const match = size.match(/(\d+\.\d+|\d+)\s*([kmgt])b?/i)
+    if (!match) return parseFloat(size)
+    const [value, unit] = match.slice(1)
+    const index = units.indexOf(unit.toLowerCase())
+    return Math.round(parseFloat(value) * Math.pow(1024, index))
+  }
+  prepareAdvancedTable()
+</script>
+
+</body>
+</html>
+
+
+
