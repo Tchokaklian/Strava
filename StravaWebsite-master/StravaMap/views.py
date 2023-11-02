@@ -348,13 +348,10 @@ def act_map(request, act_id):
     return render(request,"base_map.html", context)
 
 
-def act_map_by_col(request,col_id,act_id):
-    print("col_id = ",col_id)        
+def act_map_by_col(request,col_id,act_id):      
     return  act_map(request, act_id)
 
-def col_map_by_act(request,act_id,col_id):
-    print("act_id = ",act_id)        
-    #return HttpResponse("You're looking at question")
+def col_map_by_act(request,act_id,col_id):    
     return  col_map(request, col_id)
 
 ##########################################################################
@@ -363,7 +360,6 @@ def fColsListView(request,**kwargs):
             
     code_paysregion = kwargs['pk']        
 
-    print('code_paysregion = ', code_paysregion)
     listeCols = Col.objects.filter(col_code__icontains=code_paysregion).order_by("col_alt")
 
     country_region = get_country_region(code_paysregion)
