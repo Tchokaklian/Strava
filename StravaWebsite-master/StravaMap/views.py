@@ -7,7 +7,7 @@ import folium
 import requests
 import pandas as pd
 import polyline
-from StravaMap.models import Activity, Perform, Segment, User_dashboard, User_var
+from StravaMap.models import Activity, Month_stat, Perform, Segment, User_dashboard, User_var
 from StravaMap.models import Col, Country
 from StravaMap.models import Col_counter
 from StravaMap.models import Strava_user
@@ -23,7 +23,7 @@ from django.db.models import Max
 ###################################################################
 
 def base_map(request):
-                              
+                                  
     # Make your map object
     main_map = folium.Map(location=get_map_center(), zoom_start = 6) # Create base map
 
@@ -34,6 +34,12 @@ def base_map(request):
             
     folium.LayerControl().add_to(main_map)
 
+    # Statistiques Mensuelles
+
+
+     ###TODO 1 = moi
+    compute_all_month_stat(1)
+    
     # Les cols passés
     colOK = cols_effectue(conn)    
     listeOK = []
@@ -125,8 +131,7 @@ def connected_map(request):
     un_jour_avant = ze_epoc - un_d_epoc
     
     param = {'after': un_jour_avant , "per_page": 200}
-    #param = {}
-    
+        
     activities_json = requests.get(activites_url, headers=header, params=param).json()
                 
     ########################
@@ -154,11 +159,11 @@ def connected_map(request):
     for ligne in range(len(activities_df)):
         AllVisitedCols = []
         myGPSPoints = []        
-        strava_id = int(activities_df['id'][ligne]          )
-        activity_name = activities_df['name'][ligne]      
+        strava_id = int(activities_df['id'][ligne])        
+        activity_name = activities_df['name'][ligne]              
         act_start_date = activities_df['start_date'][ligne]      
         act_dist = activities_df['distance'][ligne]      
-        act_den = activities_df['total_elevation_gain'][ligne]       
+        act_den = activities_df['total_elevation_gain'][ligne]          
         sport_type = activities_df['sport_type'][ligne]
         act_time = int(activities_df['moving_time'][ligne])
         act_power = activities_df['average_watts'][ligne]
@@ -198,7 +203,8 @@ def connected_map(request):
     context = {
         "main_map":main_map_html
     }
-        
+
+            
     return render(request, 'index.html', context)
 
 
@@ -214,7 +220,7 @@ def index(request):
         'Nombre de Cols': num_cols,
         'Nombre de Cols (AM)': num_cols06,
     }
-
+    
     # Render the HTML template index.html with the data in the context variable
     return render(request, 'index.html', context)
 
@@ -438,3 +444,6 @@ class SegmentListView(generic.ListView):
         qsOk = Segment.objects.all()
         return qsOk           
 
+class MonthStatListView(generic.ListView):        
+    def get_queryset(self):        
+        return Month_stat.objects.all().order_by("-yearmonth")

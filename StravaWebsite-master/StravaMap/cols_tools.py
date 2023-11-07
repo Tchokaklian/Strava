@@ -221,7 +221,18 @@ def refresh_access_token():
     
     return True
 
+#####################################################
+#   month = 202311
+#   days_list = [20231102, 20231105, 20210712]
+#   Return: 2
+#####################################################
 
+def get_dayson_in_month(month,days_list):    
+    nb_count = 0
+    for oneDay in days_list:                
+        if (month == oneDay [:6]):            
+            nb_count +=1                
+    return nb_count
 
 
 

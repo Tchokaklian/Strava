@@ -15,21 +15,25 @@
 
 {% block content %}
 
-  <h3 >Liste des Performances</h3>
+<h3 >Liste des Performances
+  <br>
+</h3> 
+
   {% if perform_list %}
-  <table width="100%" class="sortable n-last" >
+  <table id = "myTable" width="100%" class="sortable n-last" >  
     <thead>
       <tr>
-        <th class="indicator-left">DATE</th>
-        <th class="indicator-left">SEGMENT</th>
+        <th class="indicator-left">DATE <input type="text" size="10" id="myInputY" onkeyup="myFunction(0)" placeholder="Search.."></th>
+        <th class="indicator-left">SEGMENT <input type="text" id="myInputN" onkeyup="myFunction(1)" placeholder="Search.."></th>
         <th class="indicator-left">LONGUEUR</th>
         <th class="indicator-left">PENTE</th>
         <th class="indicator-left">VAM</th>
-        <th class="indicator-left">FC</th>                  
+        <th class="indicator-left">FC</th>       
+        <th class="indicator-left">Chrono</th>                       
       </tr>    
     </thead>
     <tbody>
-    {% for perform in perform_list %}                
+    {% for perform in perform_list %}                 
       <tr>
         <td data-sort={{perform.perf_date|date:"ymd"}} >                    
           {{perform.perf_date|date:"d M Y" }} 
@@ -46,10 +50,13 @@
         <td >
           {{perform.perf_vam}}         
         </td> 
-        <td >
+        <td >                   
           {{perform.perf_fc}}         
         </td>         
-      </tr>     
+        <td data-sort={{perform.perf_chrono}}>                   
+          {{perform.get_chrono_str}}         
+        </td>                 
+      </tr>         
     {% endfor %}
   </tbody>
   </table>  
@@ -58,46 +65,35 @@
   {% endif %}
 {% endblock %}
 
-<script>
-  var table = document.querySelector('.massive')
-  var tbody = table.tBodies[0]
-  var rows = [].slice.call(tbody.rows, 0)
-  var fragment = document.createDocumentFragment()
-
-  for (var k = 0; k < 50; k++) {
-    for (var i = 0; i < rows.length; i++) {
-      fragment.appendChild(rows[i].cloneNode(true))
-    }
-  }
-  tbody.innerHTML = ''
-  tbody.appendChild(fragment)
-</script>
-
-<script>
-  function prepareAdvancedTable() {
-    var size_table = document.querySelector('.advanced-table')
-    var rows = size_table.tBodies[0].rows    
-    for (let i = 0; i < rows.length; i++) {
-      const date_element = rows[i].cells[2]
-      const size_element = rows[i].cells[1]
-      date_element.setAttribute('data-sort', date_element.innerText.replace(/(\d+)\/(\d+)\/(\d+)/, '$3$1$2'))
-      size_element.setAttribute('data-sort', toBytes(size_element.innerText))
-    }
-  }
-
-  function toBytes(size) {
-    const units = [, 'k', 'm', 'g', 't']
-    const match = size.match(/(\d+\.\d+|\d+)\s*([kmgt])b?/i)
-    if (!match) return parseFloat(size)
-    const [value, unit] = match.slice(1)
-    const index = units.indexOf(unit.toLowerCase())
-    return Math.round(parseFloat(value) * Math.pow(1024, index))
-  }
-  prepareAdvancedTable()
-</script>
-
 </body>
 </html>
 
-
-
+<script>
+function myFunction(col) {
+  var input, filter, table, tr, td, i;
+  inputY = document.getElementById("myInputY");
+  inputN = document.getElementById("myInputN");
+  filterY = inputY.value.toUpperCase();  
+  filterN = inputN.value.toUpperCase();  
+  if(col==0) {
+    filter = filterY;
+    inputN.value = "" ;
+  }
+  if(col==1) {
+    filter = filterN;
+    inputY.value = "" ;
+  }
+  table = document.getElementById("myTable");
+  tr = table.getElementsByTagName("tr");
+  for (i = 0; i < tr.length; i++) {
+    td = tr[i].getElementsByTagName("td")[col];
+    if (td) {
+      if (td.innerHTML.toUpperCase().indexOf(filter) > -1) {
+        tr[i].style.display = "";
+      } else {
+        tr[i].style.display = "none";
+      }
+    }       
+  }
+}
+</script>

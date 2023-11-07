@@ -2,17 +2,19 @@
 
 {% block content %}
 
-  <h1>Liste des activités</h1>
+  <h3>Liste des activités</h3>
   
   {% if activity_list %}
-  <table width="100%">
+  <table width="100%" class="sortable n-last">
+    <thead>
     <tr>
-        <td align="center"><b>Date</td></b>
-        <td align="center"><b>Distance</td></b>          
-        <td align="center"><b>Dénivelé</td></b>          
-        <td align="left"><b>Activité</td></b>          
+        <th class="indicator-left">Date</th>
+        <th class="indicator-left">Distance</th>
+        <th class="indicator-left">Dénivelé</th>
+        <th class="indicator-left">Activité</th>        
     </tr>    
-  
+    </thead>
+    <tbody>
     {% for activity in activity_list %}      
       <tr>
         <td style="width:8%">
@@ -30,6 +32,7 @@
         </td>  
       </tr> 
     {% endfor %}
+  </tbody>
   </table>  
   {% else %}
     <p>There are no Col in the Database.</p>

@@ -1,8 +1,9 @@
 var region_name_list = [],
     region_code_list = [],
     region_country_list = []
-    region_id_list = []    
-
+    region_id_list = [],
+    year_displayed = '2023'
+    
 function country(value) {              
 
     const CombolisteRegion = document.getElementById("region");                
@@ -28,5 +29,3 @@ function region(value) {
   window.location.href="/cols_list/"+codePays+"/";
 }
 
-
-    

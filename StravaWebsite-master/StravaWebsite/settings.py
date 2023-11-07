@@ -26,8 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '144e2d05e4b1b91f095dbafe6b40fbc4a9d0933e'
-
+SECRET_KEY = "c55adf130e27f791abf1b51078239c43e4e59693"
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -45,7 +44,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'social_django',
     'StravaMap',
-    #'django_table_sort',
 ]
 
 MIDDLEWARE = [
@@ -55,7 +53,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',    
 ]
 
 ROOT_URLCONF = 'StravaWebsite.urls'
@@ -117,7 +115,7 @@ AUTHENTICATION_BACKENDS = (
 SOCIAL_AUTH_LOGIN_REDIRECT_URL = '/connected/'
 SOCIAL_AUTH_STRAVA_SCOPE = ['activity:read_all']
 SOCIAL_AUTH_STRAVA_KEY = '2711'
-SOCIAL_AUTH_STRAVA_SECRET = '144e2d05e4b1b91f095dbafe6b40fbc4a9d0933e'
+SOCIAL_AUTH_STRAVA_SECRET = "c55adf130e27f791abf1b51078239c43e4e59693"
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/

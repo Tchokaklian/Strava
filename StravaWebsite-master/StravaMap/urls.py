@@ -16,7 +16,7 @@ urlpatterns = [
     path('index/',base_map,name='index'),
     path('col_map/<str:col_id>', col_map, name = 'Col Map View'),
     path('act_map/<int:act_id>', act_map, name = 'Activity Map View'),        
-    ###
+    ###    
     path('activity/', ActivityListView.as_view(), name='activity'),        
     path('activity/<pk>', ActivityDetailView.as_view()),            
     path('activity/<int:act_id>/<int:col_id>/', col_map_by_act,name = "act-col"),            
@@ -26,9 +26,7 @@ urlpatterns = [
     path('cols/', ColsListView.as_view(), name='cols'),    
     path('cols/<pk>/', ColsDetailView.as_view(), name = "col-detail"),                           
     path('cols/<int:col_id>/<int:act_id>/', act_map_by_col, name = "col-act"),                           
-    ###
-    path('dashboard/', User_dashboardView.as_view(), name='userdashboard'),            
-    ###
+    ###        
     path('cols06ok/', ColsOkListView.as_view(), name='colsok'),                           
     path('cols06ok/<pk>/', ColsDetailView.as_view(),name = "col-detail"),           
     path('cols06ok/<int:col_id>/<int:act_id>/', act_map_by_col, name = "col-act"),                                  
@@ -37,8 +35,12 @@ urlpatterns = [
     path('cols06ko/<pk>/', ColsDetailView.as_view(),name = "col-detail"),                           
     path('cols06ok/<int:col_id>/<int:act_id>/', act_map_by_col, name = "col-act"),    
     ### SEGMENTS
+    path('dashboard/', User_dashboardView.as_view(), name='userdashboard'),            
     path('segment/',SegmentListView.as_view(), name='segment'),
-    path('perform/',PerformListView.as_view(), name = 'perform'),                 
+    path('perform/',PerformListView.as_view(), name = 'perform'),         
+    ### 
+    path('calendar/',MonthStatListView.as_view(), name = 'calendar'),         
+                    
 ]
 
 urlpatterns += staticfiles_urlpatterns()

@@ -1,8 +1,9 @@
 import datetime
+from time import strftime
 from django.db import models
 from numpy import generic
 
-from StravaMap.vars import get_strava_user_id
+from StravaMap.vars import display_year_month, get_strava_user_id
 
 # Create your models here.
 
@@ -33,7 +34,7 @@ class Col(models.Model):
 		sc = self.col_code		
 		q1 = Col_perform.objects.filter(col_code=sc)		
 		return q1
-
+		
 class Activity(models.Model):
 	act_id = models.IntegerField(null=False, primary_key=True)	
 	strava_id = models.IntegerField(null=False, default=0)	
@@ -160,7 +161,24 @@ class Perform(models.Model):
 	def get_segment_slope(self):		
 		sid = self.segment_id
 		q1 = Segment.objects.filter(segment_id=sid)		
-		return q1[0].slope
+		return q1[0].slope	
+		
+	def get_chrono_str(self):		
+		secondes = self.perf_chrono
+		sHeure = "0"
+		sMinutes  = "00"
+		sSecondes = "00"		
+		heures = int(secondes/3600)
+		if heures>0:
+			sHeure = str(heures)
+			secondes = secondes - heures*3600
+		minutes = int(secondes/60)		
+		if minutes>0:			
+			sMinutes = "{:02d}".format(minutes)	 		
+			secondes = secondes - minutes*60
+		sSecondes = "{:02d}".format(secondes)	 		
+		hms = sHeure+":"+sMinutes+":"+sSecondes
+		return hms		
 
 class User_var(models.Model):				
 	strava_user = models.CharField(max_length=100, primary_key=True, default="-") 
@@ -237,4 +255,40 @@ class User_dashboard(models.Model):
 		self.save()
 				
 		return self.run_year_km
+	
+class Month_stat(models.Model):					
+	month_stat_id = models.IntegerField(auto_created=True,  primary_key=True)
+	strava_user_id = models.IntegerField(null=True)
+	yearmonth = models.CharField(max_length=6, default="190000")
+	days_on = models.IntegerField(null=True)
+	bike_km = models.IntegerField(null=True)
+	bike_ascent = models.IntegerField(null=True)
+	bike_time = models.IntegerField(null=True)
+	col_count = models.IntegerField(null=True)
+	col2000_count = models.IntegerField(null=True)
+	top_alt_col = models.IntegerField(null=True)
+
+	def yearmonth_html(self):
+		annee = self.yearmonth[0:4]
+		mois = int(self.yearmonth[4:])		
+		mois_str = display_year_month(mois) 
+		return  mois_str + " " + annee
+	
+	def get_chrono_str(self):		
+		secondes = self.bike_time
+		sHeure = "0"
+		sMinutes  = "00"
+		sSecondes = "00"		
+		heures = int(secondes/3600)
+		if heures>0:
+			sHeure = str(heures)
+			secondes = secondes - heures*3600
+		minutes = int(secondes/60)		
+		if minutes>0:			
+			sMinutes = "{:02d}".format(minutes)	 		
+			secondes = secondes - minutes*60
+		sSecondes = "{:02d}".format(secondes)	 		
+		hms = sHeure+"h"+sMinutes
+		return hms		
+	
 	

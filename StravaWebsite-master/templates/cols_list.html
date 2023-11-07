@@ -2,17 +2,19 @@
 
 {% block content %}
 
-  <h1>Liste des cols du département</h1>  
+  <h3>Liste des cols du département</h3>  
   {% load static %} <a href="{% url 'index' %}"><img src="{% static '/image/map.png' %}"  /> Voir sur la carte</a>   
   {% if col_list %}
   <br />
-  <br />
-  <table>
-    <tr>
-        <td><b>Nom</td></b>
-        <td><b>Altitude</td></b>          
-        <td><b>Code 100 cols</td></b>          
-    </tr>      
+  <table class="sortable n-last">
+    <thead>
+    <tr>         
+        <th class="indicator-left">Nom</th>
+        <th class="indicator-left">Altitude</th>
+        <th class="indicator-left">Code 100 cols</th>     
+    </tr>  
+    </thead>    
+    <tbody>
     {% for col in col_list %}
       <tr>
         <td>
@@ -24,6 +26,7 @@
       </tr>  
 
     {% endfor %}
+  </tbody>
   </table>  
   {% else %}
     <p>There are no Col in the Database.</p>

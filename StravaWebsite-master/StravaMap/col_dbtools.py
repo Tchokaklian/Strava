@@ -1,9 +1,11 @@
 from aifc import Error
+import datetime
 import sqlite3
+import time
 
 from django.urls import path
 from StravaMap import cols_tools as ct
-from StravaMap.models import Activity, Col_counter as cc, Col_perform as cp, Country, Region, User_var
+from StravaMap.models import Activity, Col, Col_counter as cc, Col_perform as cp, Country, Month_stat, Region, User_var
 from django.db.models import F
 
 from StravaMap.vars import get_default_country
@@ -34,10 +36,7 @@ def select_all_cols(conn, region_info):
     :return:
     """
     cur = conn.cursor()
-
-    print("region_info = ")
-    print(region_info)
-
+    
     if region_info == "00":
         codeSql = "SELECT col_name,col_alt,col_lat,col_lon,col_code,col_type FROM StravaMap_col"
     else:
@@ -113,12 +112,7 @@ def insert_col_perform(conn,act_id,rows):
 #############################################################################
 
 def compute_cols_by_act( conn, myUser_id,myActivity_id):
-    
-    #remove all
-    #cc.objects.filter(user_id=myUser_id).delete()        
-
-    #print("activity_id = ", myActivity_id)
-                    
+                        
     perf = cp.objects.filter(strava_id=myActivity_id).values_list("col_code", flat=True)
                         
     for colCode in perf:        
@@ -302,15 +296,139 @@ def get_user_region_view(strava_user):
 
 ###########################################################################################################
 
-    
-    
-    
-    
-    
+def compute_all_month_stat(my_user_id: int):
 
+    monthKeyList = []
+    dayList = []
+    bikeKm = {}
+    bikeAscent = {}
+    bikeTime = {}
+    colsCount = {}    
+    cols2000Count = {}
+    topAlt = {}
+        
+    millisecBegin = int(time.time() * 1000)    
+    activities = Activity.objects.all()
 
+    for oneActivity in activities:
+        if oneActivity.act_type == "Run" or oneActivity.act_type == "Ride" or oneActivity.act_type == "Hike":            
+            formatedDate = oneActivity.act_start_date.strftime("%Y%m")
+            formatedDay = oneActivity.act_start_date.strftime("%Y%m%d")            
+                        
+            if formatedDay not in dayList: 
+                dayList.append(formatedDay) 
+            
+            if formatedDate not in monthKeyList: 
+                monthKeyList.append(formatedDate)                 
+
+            if oneActivity.act_type == "Ride":                                
+                if formatedDate in bikeKm: 
+                    km = bikeKm[formatedDate] + round(oneActivity.act_dist/1000)
+                    ascent = bikeAscent[formatedDate] + round(oneActivity.act_den)
+                    thetime  = bikeTime[formatedDate] + oneActivity.act_time
+                    bikeKm[formatedDate]= km 
+                    bikeAscent[formatedDate] = ascent
+                    bikeTime[formatedDate] = thetime                
+                else:
+                    bikeKm[formatedDate] = round(oneActivity.act_dist/1000)
+                    bikeAscent[formatedDate] = round(oneActivity.act_den)
+                    bikeTime[formatedDate] = oneActivity.act_time
+
+            ### Et les Cols
+
+            colsList = cp.objects.filter(strava_id = oneActivity.strava_id)                        
+            for uncol in colsList:                
+                detailListCol = Col.objects.filter(col_code = uncol.col_code)                                
+                for leCol in detailListCol: 
+
+                    altitude = leCol.col_alt
+
+                    if formatedDate in colsCount:
+                        colsCount[formatedDate] = colsCount[formatedDate] + 1                                                
+                    else:
+                        colsCount[formatedDate] = 1                        
+
+                    if altitude >= 2000:                        
+                        if formatedDate in cols2000Count:
+                            cols2000Count[formatedDate] = cols2000Count[formatedDate] + 1
+                        else:
+                            cols2000Count[formatedDate] = 1
+
+                    if formatedDate in topAlt:
+                        if altitude > topAlt[formatedDate]:
+                            topAlt[formatedDate] = altitude
+                    else:
+                        topAlt[formatedDate] = altitude                                
+                            
+    ### Pascours des listes construites
+    myKm = 0
+    myAsc = 0
+    thetime = 0   
+    nbc = 0         
+    nb2000 = 0
+    top = 0
+
+                                                       
+    for uniqueKey in monthKeyList:        
+        if uniqueKey in  bikeKm:
+            myKm = bikeKm[uniqueKey]
+            myAsc = bikeAscent[uniqueKey]
+            thetime = bikeTime[uniqueKey]                                    
+
+        if uniqueKey in colsCount:            
+            nbc = colsCount[uniqueKey]            
+        
+        if uniqueKey in cols2000Count:
+            nb2000 = cols2000Count[uniqueKey]
+
+        if uniqueKey in topAlt:
+            top = topAlt[uniqueKey] 
+
+        compute_month_stat(my_user_id,uniqueKey,dayList,myKm,myAsc,thetime,nbc,nb2000,top)
+
+        myKm = 0
+        myAsc = 0
+        thetime = 0   
+        nbc = 0         
+        nb2000 = 0
+        top = 0
+                    
+    millisecEnd = int(time.time() * 1000)
+
+    print("--------------------------------------------")
+    print("trt: compute_all_month_stat: ",millisecEnd-millisecBegin, " ms" )
+    print("--------------------------------------------")
     
+    return 0
 
+###########################################################################################################
 
-
-
+def compute_month_stat(stravaUserId,yyyy_mm,formatedDay,bikeKm,BikeAsc, bikeTime,colsCount,cols2000Count,topAlt):
+    
+    nbDays0n = ct.get_dayson_in_month (yyyy_mm,formatedDay)    
+    myStat = Month_stat.objects.filter(strava_user_id = stravaUserId, yearmonth = yyyy_mm)
+    
+    if len(myStat) > 0:
+        for omeLine in myStat:
+            omeLine.bike_km = bikeKm
+            omeLine.bike_ascent = BikeAsc
+            omeLine.bike_time = bikeTime
+            omeLine.col2000_count = cols2000Count
+            omeLine.col_count = colsCount
+            omeLine.top_alt_col = topAlt
+            omeLine.days_on = nbDays0n        
+            omeLine.save()
+    else:
+            newLine = Month_stat()
+            newLine.strava_user_id = stravaUserId
+            newLine.yearmonth = yyyy_mm 
+            newLine.bike_km = bikeKm
+            newLine.bike_ascent = BikeAsc
+            newLine.bike_time = bikeTime
+            newLine.col2000_count = cols2000Count
+            newLine.col_count = colsCount
+            newLine.top_alt_col = topAlt
+            newLine.days_on = nbDays0n        
+            newLine.save()
+    
+    return 0
