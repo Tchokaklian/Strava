@@ -2,15 +2,14 @@ import datetime
 import requests
 
 from StravaMap.models import Perform, Segment
+from StravaMap.vars import f_debug_trace
 
 ################################################
 #   Retourne  la liste des segments pertinents
 ################################################
 
 def segment_explorer(myRectangle, access_token, strava_id):
-    
-    print("{ segment_explorer }")
-
+            
     header = {'Authorization': 'Bearer ' + str(access_token)}            
     param = {'id': strava_id}
 
@@ -22,11 +21,11 @@ def segment_explorer(myRectangle, access_token, strava_id):
 
     ret = 0
     
-
     for oneSegment in ExplorerResponse['segments']:
 
         strava_id = oneSegment["id"]
         nameSegment = oneSegment["name"]
+
         avg_grade = oneSegment["avg_grade"]
         elev_difference = oneSegment["elev_difference"]
         distance = oneSegment["distance"]/1000
@@ -63,16 +62,12 @@ def segment_explorer(myRectangle, access_token, strava_id):
 ################################################
 
 def save_segment_perf(segment_id, segment_strava_id, access_token, elev_difference):
-
-    print("{ segment_perfomances }")
-    
+        
     param = {'segment_id': segment_strava_id}
     header = {'Authorization': 'Bearer ' + str(access_token)} 
     
     myDate = datetime.datetime.now().isoformat()
-    
 
-    
     performance_url = "https://www.strava.com/api/v3/segment_efforts?segment_id="+ str (segment_strava_id)
     performance_url = performance_url + "&start_date_local="+"2010-10-01T00:00:30+01:00"
     performance_url = performance_url + "&end_date_local="+str(myDate)    
@@ -83,6 +78,7 @@ def save_segment_perf(segment_id, segment_strava_id, access_token, elev_differen
     
     ret = 0        
     for onePerf in performanceResponse:
+
         fc_avg = 0
         fc_max = 0
         idPerf = onePerf["id"]

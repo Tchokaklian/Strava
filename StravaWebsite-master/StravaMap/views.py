@@ -1,12 +1,10 @@
-import os
-from unittest import loader
-from django.http import HttpResponse
 from django.views import generic
 from django.shortcuts import render
 import folium
 import requests
 import pandas as pd
 import polyline
+from StravaMap.forms import ColForm
 from StravaMap.models import Activity, Month_stat, Perform, Segment, User_dashboard, User_var
 from StravaMap.models import Col, Country
 from StravaMap.models import Col_counter
@@ -14,8 +12,11 @@ from StravaMap.models import Strava_user
 from StravaMap import cols_tools as ct
 from StravaMap.col_dbtools import *
 from StravaMap.segments_tools import segment_explorer
-from StravaMap.vars import get_map_center, get_strava_user, get_strava_user_id
+from StravaMap.vars import get_map_center, get_strava_user, get_strava_user_id, set_strava_user, set_strava_user_id
 from django.db.models import Max
+from django.shortcuts import render , redirect
+from django.contrib.auth.models import User
+from social_django.models import UserSocialAuth
 
 
 ###################################################################
@@ -23,9 +24,17 @@ from django.db.models import Max
 ###################################################################
 
 def base_map(request):
+
+    user = request.user # Pulls in the Strava User data                
+    f_debug_trace("views.py","base_map","user = "+str(user))
+    update_strava_user_id(user)
                                   
     # Make your map object
-    main_map = folium.Map(location=get_map_center(), zoom_start = 6) # Create base map
+    view_region_info =  get_user_region_view(user)            
+    continent = "EUROPE"
+    if view_region_info[0] == "AR":
+        continent = "SOUTHAMERICA"
+    main_map = folium.Map(location=get_map_center(continent), zoom_start = 6) # Create base map
 
     conn = create_connection('db.sqlite3')    
     
@@ -36,7 +45,6 @@ def base_map(request):
 
     # Statistiques Mensuelles
 
-
      ###TODO 1 = moi
     compute_all_month_stat(1)
     
@@ -46,8 +54,7 @@ def base_map(request):
     for oneCol in colOK:        
         listeOK.append(oneCol[3])   # col_code
         
-    # Tous les cols            
-    view_region_info =  get_user_region_view(get_strava_user())            
+    # Tous les cols                
     myColsList =  select_all_cols(conn,view_region_info)
                 
     # Plot Cols onto Folium Map
@@ -81,13 +88,18 @@ def base_map(request):
 def connected_map(request):
         
     # Make your map object    
-    main_map = folium.Map(location=get_map_center(), zoom_start = 6) # Create base map 
-    user = request.user # Pulls in the Strava User data
-    strava_login = user.social_auth.get(provider='strava') # Strava login
+    main_map = folium.Map(location=get_map_center("EUROPE"), zoom_start = 6) # Create base map 
+    user = request.user # Pulls in the Strava User data                
+    f_debug_trace("views.py","connected_map","user = "+str(user))
+    update_strava_user_id(user)
+    strava_login = user.social_auth.get(provider='strava') # Strava login             
+                
     token_type = strava_login.extra_data['token_type'] 
     access_token = strava_login.extra_data['access_token'] # Strava Access token
     refresh_token = strava_login.extra_data['refresh_token'] # Strava Refresh token
     expires = strava_login.extra_data['expires'] 
+
+    print("access_token=------------------------",access_token) 
     
     activites_url = "https://www.strava.com/api/v3/athlete/activities"
     
@@ -95,6 +107,7 @@ def connected_map(request):
 
     if myUser_sq.count() == 0:
         myUser = Strava_user()
+        
         myUser.last_name = user
         myUser.first_name = user
         myUser.token_type = token_type
@@ -103,6 +116,7 @@ def connected_map(request):
         myUser.strava_user = user
         myUser.expire_at = expires
         myUser.save()
+        f_debug_trace("views.py","connected_map","New User = "+ user)
         
     else:
         for oneOk in myUser_sq:
@@ -110,14 +124,15 @@ def connected_map(request):
             myUser.access_token = access_token
             myUser.refresh_token = refresh_token
             myUser.expire_at = expires
-            myUser.save()
+            myUser.save()            
 
     my_user_var_sq = User_var.objects.all().filter(strava_user = user)
 
     if my_user_var_sq.count() == 0:
         my_user_var = User_var()
-        my_user_var.strava_user = user
-        my_user_var.save()
+        my_user_var.strava_user = get_strava_user()
+        my_user_var.strava_user_id = get_strava_user_id()
+        my_user_var.save() 
             
     # Get activity data
     header = {'Authorization': 'Bearer ' + str(access_token)}
@@ -252,13 +267,18 @@ def col_map(request, col_id):
     return render(request, 'index.html', context)
 
 def act_map(request, act_id):
-
+    
     ct.refresh_access_token()
 
-    myActivity_sq = Activity.objects.all().filter(act_id = act_id)
+    user = request.user # Pulls in the Strava User data                
+    f_debug_trace("views.py","act_map","user = "+str(user))
+    update_strava_user_id(user)
 
-    USER = get_strava_user()
-    userList = Strava_user.objects.all().filter(strava_user = USER)
+    myActivity_sq = Activity.objects.all().filter(act_id = act_id)
+    myUser = get_strava_user()    
+    access_token = "notFound"
+    
+    userList = Strava_user.objects.all().filter(strava_user = myUser)
     for userOne in userList:
             myUser = userOne
             access_token = myUser.access_token                
@@ -446,4 +466,23 @@ class SegmentListView(generic.ListView):
 
 class MonthStatListView(generic.ListView):        
     def get_queryset(self):        
-        return Month_stat.objects.all().order_by("-yearmonth")
+        return Month_stat.objects.all().order_by("-yearmonth")        
+    
+def new_col_form(request):
+    if request.method  == 'POST':         
+        form = ColForm(request.POST)
+        if form.is_valid():            
+            form.save()
+            return redirect('../cols/')
+    else:                
+        form = ColForm()
+        return render(request , 'new_col.html' , {'form' : form})    
+    
+def update_strava_user_id(username):
+    f_debug_trace("views.py","update_strava_user_id","username = "+str(username))
+    set_strava_user(username)
+    id = User.objects.get(username=username).pk    
+    uid = UserSocialAuth.objects.get(id=id).uid    
+    set_strava_user_id(uid)
+    return uid
+    

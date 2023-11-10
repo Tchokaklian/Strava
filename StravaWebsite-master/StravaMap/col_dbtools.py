@@ -3,12 +3,11 @@ import datetime
 import sqlite3
 import time
 
-from django.urls import path
 from StravaMap import cols_tools as ct
 from StravaMap.models import Activity, Col, Col_counter as cc, Col_perform as cp, Country, Month_stat, Region, User_var
 from django.db.models import F
 
-from StravaMap.vars import get_default_country
+from StravaMap.vars import f_debug_col, f_debug_trace, get_default_country
 
 
 #############################################################################
@@ -118,9 +117,7 @@ def compute_cols_by_act( conn, myUser_id,myActivity_id):
     for colCode in perf:        
         
         nbPassage = getActivitiesByCol(conn,colCode)        
-
-        print(" >>>>> Col Matching <<<<< ")
-
+                
         exists = cc.objects.filter(col_code=colCode, user_id=myUser_id).count()
                 
         if exists==0:
@@ -129,13 +126,13 @@ def compute_cols_by_act( conn, myUser_id,myActivity_id):
             new_cc.col_count=1
             new_cc.user_id=myUser_id
             new_cc.save()            
-            print(">>>>>    NEW COL    <<<<<")            
-            print(">>>>>"+new_cc.get_col_name()+"<<<<<")
+            f_debug_trace("col_dbtools.py","compute_cols_by_act","Nouveau col: " + new_cc.get_col_name())            
         else:
             my_cc = cc.objects.filter(col_code=colCode, user_id=myUser_id)
             upd_cc = my_cc[0]
             upd_cc.col_count=nbPassage
             upd_cc.save()
+            f_debug_trace("col_dbtools.py","compute_cols_by_act","Col Franchis: " + upd_cc.get_col_name()+'('+str(nbPassage)+')')            
 
         lact = Activity.objects.filter(strava_id=myActivity_id)
         for act in lact:
@@ -220,9 +217,7 @@ def getActivitiesByCol(conn, col_code):
     for row in rows :                        
         #TODO -        
         myListActivities = myListActivities+1
-
-    #print("col_code", myListActivities)        
-                            
+                                
     return myListActivities   
 
 ##########################################################################################################
@@ -262,9 +257,22 @@ def recompute_activity(strava_id, activities_df, strava_user):
 ###########################################################################################################
 
 def get_country_region(code_paysregion):    
-    ### TODO    
-    country = code_paysregion[0:2]+"A"
+    ### TODO                
+    lPaysA = []    
+    lPaysA.append("FR")
+    lPaysA.append("IT")    
+    codePays = code_paysregion[0:2] 
+    if codePays in lPaysA:
+        country = code_paysregion[0:2]+"A"
+    else:
+        country = code_paysregion[0:2]    
+
     region = code_paysregion[3:5]
+
+    if f_debug_col():
+        f_debug_trace("col_dbtools.py","country",country)
+        f_debug_trace("col_dbtools.py","region",region)
+        
     country_region = []
     country_region.append(country)
     country_region.append(region)    
@@ -286,12 +294,15 @@ def update_user_var(strava_user, country_code, region_code):
 def get_user_region_view(strava_user):    
     my_user_var_sq = User_var.objects.all().filter(strava_user = strava_user)        
     view_country_code = "FRA"
-    view_region_code = "06"
+    view_region_code = "06"    
     for oneOk in my_user_var_sq:            
             myUser_var = oneOk
             view_country_code = myUser_var.view_country_code                                                           
             view_region_code = myUser_var.view_region_code                                                                                               
-    region_info = [view_country_code,view_region_code]            
+    region_info = [view_country_code,view_region_code]     
+
+    f_debug_trace('col_dbtools.py','get_user_region_view',region_info)
+
     return region_info
 
 ###########################################################################################################
@@ -395,9 +406,7 @@ def compute_all_month_stat(my_user_id: int):
                     
     millisecEnd = int(time.time() * 1000)
 
-    print("--------------------------------------------")
-    print("trt: compute_all_month_stat: ",millisecEnd-millisecBegin, " ms" )
-    print("--------------------------------------------")
+    f_debug_trace("col_db_tools.py","compute_all_month_stat",str(millisecEnd-millisecBegin)+" ms")
     
     return 0
 

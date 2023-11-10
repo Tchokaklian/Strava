@@ -1,7 +1,4 @@
-import datetime
-from time import strftime
 from django.db import models
-from numpy import generic
 
 from StravaMap.vars import display_year_month, get_strava_user_id
 
@@ -34,7 +31,7 @@ class Col(models.Model):
 		sc = self.col_code		
 		q1 = Col_perform.objects.filter(col_code=sc)		
 		return q1
-		
+	
 class Activity(models.Model):
 	act_id = models.IntegerField(null=False, primary_key=True)	
 	strava_id = models.IntegerField(null=False, default=0)	
@@ -98,6 +95,11 @@ class Col_perform(models.Model):
 		sc = self.strava_id
 		q1 = Activity.objects.filter(strava_id=sc)			
 		return q1[0].act_den
+	
+	def get_activity_type(self):		
+		sc = self.strava_id
+		q1 = Activity.objects.filter(strava_id=sc)			
+		return q1[0].act_type
 
 class Col_counter(models.Model):
 	col_count_id = models.IntegerField(auto_created=True,  primary_key=True)
@@ -114,6 +116,11 @@ class Col_counter(models.Model):
 		sc = self.col_code
 		q1 = Col.objects.filter(col_code=sc)				
 		return q1[0].col_id
+	
+	def get_col_alt(self):		
+		sc = self.col_code
+		q1 = Col.objects.filter(col_code=sc)		
+		return q1[0].col_alt
 	
 class Strava_user(models.Model):	
 	strava_user_id = models.IntegerField(auto_created=True,  primary_key=True)
@@ -198,7 +205,7 @@ class User_dashboard(models.Model):
 		nbCols = Col_counter.objects.count()		
 
 		# DB save
-		self.strava_user_id =  get_strava_user_id()
+		self.strava_user_id = get_strava_user_id()
 		self.col_count = nbCols
 		self.save()
 		return nbCols
@@ -290,5 +297,5 @@ class Month_stat(models.Model):
 		sSecondes = "{:02d}".format(secondes)	 		
 		hms = sHeure+"h"+sMinutes
 		return hms		
-	
+
 	

@@ -3,7 +3,7 @@ import numpy as N
 import requests
 from StravaMap.models import Strava_user
 
-from StravaMap.vars import get_app_client_id, get_app_client_secret, get_strava_user
+from StravaMap.vars import  get_app_client_id, get_app_client_secret, get_strava_user
 
 import warnings
 
@@ -123,7 +123,7 @@ def getListColsUniques(colsList: ColsList):
 
 ####################################################
     
-def map_center(listePoint= PointGPS() ):
+def map_center(listePoint= PointGPS() ):                
         for unElt in listePoint:
             sum_x = 0.0
             sum_y = 0.0
@@ -138,7 +138,7 @@ def map_center(listePoint= PointGPS() ):
         
         return [sum_x,sum_y]
 
-def get_map_rectangle(listePoint= PointGPS() ):
+def get_map_rectangle(listePoint= PointGPS() ):        
         for unElt in listePoint:
             min_x = 200.0
             min_y = 200.0
@@ -180,6 +180,8 @@ def map_zoom(centrerPoint, listePoint= PointGPS() ):
         
         return int(myZoom)
 
+#########################################################
+
 def refresh_access_token():
     """ Refresh du token strava 
     
@@ -216,7 +218,7 @@ def refresh_access_token():
         myUser.save()
         
     except:
-        print("Refresh Token Error")
+        print("ERROR Refresh Token Error")
         return False
     
     return True

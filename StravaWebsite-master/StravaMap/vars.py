@@ -1,33 +1,44 @@
-########################
-STRAVA_USER_ID = 366232
-USER = "tpascal" 
-########################
-# Also in settings.py
-########################
-APP_CLIENT_ID = '2711'
-#SOCIAL_AUTH_STRAVA_SECRET = '144e2d05e4b1b91f095dbafe6b40fbc4a9d0933e'
-SOCIAL_AUTH_STRAVA_SECRET = "c55adf130e27f791abf1b51078239c43e4e59693"
-COUNTRY = "FRA"
-DEPARTEMENT = "06"
-COLOMARS = [43.76663720260908, 7.2192623894882155]
-VALENCE = [44.931782895231485, 4.884539872983281]
-########################
+from StravaWebsite import settings
+from StravaWebsite.settings import APP_CLIENT_ID, COLOMARS, COUNTRY, DEPARTEMENT, LEVEL_COL_DEBUG, SALTA, SOCIAL_AUTH_STRAVA_SECRET
+
 MONTHES = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"]
 
+def f_debug_col():
+    ret = False
+    if LEVEL_COL_DEBUG > 0:
+        ret = True
+    return ret    
+
+def f_debug_trace(classe,function,value):      
+    print("Debug >>> Class: ", classe, " >>> function: ",function, " >>> values: ",value)
+
+
+def set_strava_user_id(suid):
+    settings.strava_user_id = suid    
+    return 0
+
 def get_strava_user_id():
-    return STRAVA_USER_ID
+    return settings.strava_user_id
+
+def set_strava_user(user):
+    f_debug_trace("vars.py","set_strava_user",user)
+    settings.strava_user = user
+    return 0
 
 def get_strava_user():    
-    return USER
-
-def get_app_client_id():
-    return APP_CLIENT_ID
+    return settings.strava_user
 
 def get_app_client_secret():
     return SOCIAL_AUTH_STRAVA_SECRET   
 
-def get_map_center():        
-    return COLOMARS
+def get_app_client_id():
+    return APP_CLIENT_ID
+
+def get_map_center(continent):        
+    ret = COLOMARS
+    if continent == "SOUTHAMERICA":
+        ret = SALTA        
+    return ret
 
 def get_default_departement():    
     return DEPARTEMENT
@@ -40,5 +51,6 @@ def display_year_month(month):
     if month > 0 and month < 13:
         ret = MONTHES[month-1]
     else:
-        print("display_year_month / not found:",str(month))
+        f_debug_trace("vars.py","display_year_month","not found:"+str(month))        
+        ret = "not found"
     return ret

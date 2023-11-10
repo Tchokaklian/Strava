@@ -13,32 +13,41 @@
     <!--End Map Container-->    
     <br><br>
         
-    <p> <b>Activités:</b> </p>
-    <table>
-        <tr>
-            <td><b>Date</td></b>
-            <td><b>Activité</td></b>         
-            <td><b>Distance</td></b>          
-            <td><b>Dénivelé</td></b>           
-        </tr>
-
-        
-    {% for activity in object.get_activities_passed %}   
-        <div class="activities">                                     
+    <p> <b>Activités:</b> </p>    
+    <table id = "myTable" width="100%" class="sortable n-last" >              
+        <thead>
             <tr>
-                <td>{{ activity.get_activity_date|date:"d-M-Y" }}</td>
-                <td>
-                    <a href={{activity.get_activity_id}}>  {{ activity.get_activity_name }}</a> 
-                </td>
-                <td>
-                    {{ activity.get_activity_dist }} km 
-                </td>
-                <td>
-                    {{ activity.get_activity_den }} m
-                </td>
-            </tr>
-        </div>
-    {% endfor %}    
+                <th class="indicator-left">Date</th>
+                <th class="indicator-left">Activité</th>
+                <th class="indicator-left">Distance</th>
+                <th class="indicator-left">Dénivelé</th>
+                <th class="indicator-left">Type</th>                
+            </tr>  
+        </thead>    
+        <tbody>
+        
+            {% for activity in object.get_activities_passed %}   
+                <div class="activities">                                     
+                    <tr>                                                
+                        <td data-sort={{activity.get_activity_date|date:"ymd"}} >                    
+                            {{activity.get_activity_date|date:"d M Y" }} 
+                          </td>
+                        <td>
+                            <a href={{activity.get_activity_id}}>  {{ activity.get_activity_name }}</a> 
+                        </td>
+                        <td data-sort={{activity.get_activity_dist}}>
+                            {{ activity.get_activity_dist }} km 
+                        </td>
+                        <td>
+                            {{ activity.get_activity_den }} m
+                        </td>
+                        <td>
+                            {{ activity.get_activity_type }}
+                        </td>
+                    </tr>
+                </div>
+            {% endfor %}    
+        </tbody>
     </table>
 {% endblock %}  
 

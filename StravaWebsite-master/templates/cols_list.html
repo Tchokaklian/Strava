@@ -17,11 +17,10 @@
     <tbody>
     {% for col in col_list %}
       <tr>
-        <td>
-          
+        <td>          
           <a href="/cols/{{ col.col_id }}">{{ col.col_name }}</a>                     
         </td>  
-        <td>{{col.col_alt}} m  </td>
+        <td data-sort={{col.col_alt}}>{{col.col_alt}} m  </td>
         <td>{{col.col_code}}</td>
       </tr>  
 

@@ -3,12 +3,19 @@
 {% block content %}
   <h3>Tous les cols effectués</h3>
   {% if col_counter_list %}
-  <table>
-    <tr>
-        <td><b>Nom</td></b>
-        <td><b>Code 100 Cols</td></b>          
-        <td><b>Nombre de passages</td></b>          
-    </tr>      
+     
+<table class="sortable n-last">
+    <thead>
+    <tr>         
+        <th class="indicator-left">Nom</th>
+        <th class="indicator-left">Code</th>
+        <th class="indicator-left">Altitude</th>     
+        <th class="indicator-left">Nombre de passages</th>     
+    </tr>  
+    </thead>    
+    <tbody>
+
+
     {% for colc in col_counter_list %}                
     <tr>
       <td>
@@ -17,10 +24,14 @@
       <td>
         {{ colc.col_code }}
       </td>
-      <td>
-        {{colc.col_count}}
+      <td align="center">
+        {{colc.get_col_alt}}
       </td>             
+      <td align="center">
+        {{colc.col_count}}
+      </td>
     {% endfor %}
+  </tbody>
   </table> 
   {% else %}
     <p>There are no Col in the Database.</p>

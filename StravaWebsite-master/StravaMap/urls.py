@@ -15,7 +15,7 @@ urlpatterns = [
     path('connected/', connected_map, name='Connect Map View'),                                       
     path('index/',base_map,name='index'),
     path('col_map/<str:col_id>', col_map, name = 'Col Map View'),
-    path('act_map/<int:act_id>', act_map, name = 'Activity Map View'),        
+    path('act_map/<int:act_id>', act_map, name = 'Activity Map View'),          
     ###    
     path('activity/', ActivityListView.as_view(), name='activity'),        
     path('activity/<pk>', ActivityDetailView.as_view()),            
@@ -39,7 +39,9 @@ urlpatterns = [
     path('segment/',SegmentListView.as_view(), name='segment'),
     path('perform/',PerformListView.as_view(), name = 'perform'),         
     ### 
-    path('calendar/',MonthStatListView.as_view(), name = 'calendar'),         
+    path('calendar/',MonthStatListView.as_view(), name = 'calendar'),     
+    ### FORM
+    path('new_col/', new_col_form, name='new_col'),   
                     
 ]
 

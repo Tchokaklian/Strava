@@ -139,3 +139,19 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 X_FRAME_OPTIONS = 'SAMEORIGIN'
+
+#################################
+# my App Const and Var
+#################################
+
+LEVEL_COL_DEBUG = 1
+APP_CLIENT_ID = '2711'
+COUNTRY = "FRA"
+DEPARTEMENT = "06"
+COLOMARS = [43.76663720260908, 7.2192623894882155]
+VALENCE = [44.931782895231485, 4.884539872983281]
+SALTA = [-24.806990835036824, -65.41681557797344]
+
+strava_user_id = 0
+strava_user = ""
+
