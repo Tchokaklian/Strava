@@ -12,7 +12,7 @@ from StravaMap.models import Strava_user
 from StravaMap import cols_tools as ct
 from StravaMap.col_dbtools import *
 from StravaMap.segments_tools import segment_explorer
-from StravaMap.vars import get_map_center, get_strava_user, get_strava_user_id, set_strava_user, set_strava_user_id
+from StravaMap.vars import get_map_center
 from django.db.models import Max
 from django.shortcuts import render , redirect
 from django.contrib.auth.models import User
@@ -27,7 +27,7 @@ def base_map(request):
 
     user = request.user # Pulls in the Strava User data                
     f_debug_trace("views.py","base_map","user = "+str(user))
-    update_strava_user_id(user)
+    get_strava_user_id(request,user)
                                   
     # Make your map object
     view_region_info =  get_user_region_view(user)            
@@ -91,16 +91,14 @@ def connected_map(request):
     main_map = folium.Map(location=get_map_center("EUROPE"), zoom_start = 6) # Create base map 
     user = request.user # Pulls in the Strava User data                
     f_debug_trace("views.py","connected_map","user = "+str(user))
-    update_strava_user_id(user)
+    get_strava_user_id(request,user)
     strava_login = user.social_auth.get(provider='strava') # Strava login             
                 
     token_type = strava_login.extra_data['token_type'] 
     access_token = strava_login.extra_data['access_token'] # Strava Access token
     refresh_token = strava_login.extra_data['refresh_token'] # Strava Refresh token
     expires = strava_login.extra_data['expires'] 
-
-    print("access_token=------------------------",access_token) 
-    
+        
     activites_url = "https://www.strava.com/api/v3/athlete/activities"
     
     myUser_sq = Strava_user.objects.all().filter(strava_user = user)
@@ -130,7 +128,7 @@ def connected_map(request):
 
     if my_user_var_sq.count() == 0:
         my_user_var = User_var()
-        my_user_var.strava_user = get_strava_user()
+        my_user_var.strava_user = user
         my_user_var.strava_user_id = get_strava_user_id()
         my_user_var.save() 
             
@@ -183,7 +181,7 @@ def connected_map(request):
         act_time = int(activities_df['moving_time'][ligne])
         act_power = activities_df['average_watts'][ligne]
         act_status = 1 # not analyzed
-        strava_user = get_strava_user_id()
+        strava_user = get_strava_user_id(request,user)
 
         ########## Delete / Insert ###############
         # insert activities and col for each one
@@ -267,26 +265,31 @@ def col_map(request, col_id):
     return render(request, 'index.html', context)
 
 def act_map(request, act_id):
+
+    my_strava_user = request.session.get("strava_user")
+
+    f_debug_trace("col_tools.py","act_map","user : "+my_strava_user)
     
-    ct.refresh_access_token()
+    ct.refresh_access_token(my_strava_user)
 
-    user = request.user # Pulls in the Strava User data                
-    f_debug_trace("views.py","act_map","user = "+str(user))
-    update_strava_user_id(user)
+    user = str(request.user) # Pulls in the Strava User data                
+    f_debug_trace("views.py","act_map","user = "+user)
+    get_strava_user_id(request,user)
 
-    myActivity_sq = Activity.objects.all().filter(act_id = act_id)
-    myUser = get_strava_user()    
+    myActivity_sq = Activity.objects.all().filter(act_id = act_id)    
     access_token = "notFound"
-    
-    userList = Strava_user.objects.all().filter(strava_user = myUser)
+               
+    userList = Strava_user.objects.all().filter(strava_user = user)
     for userOne in userList:
             myUser = userOne
             access_token = myUser.access_token                
 
+    f_debug_trace("views.py","act_map","access_token = "+access_token)     
+           
     for myActivity in myActivity_sq:            
             strava_id =  myActivity.strava_id
             act_statut = myActivity.act_status
-                    
+
     activites_url = "https://www.strava.com/api/v3//activities/"+str(strava_id)
     
     # Get activity data
@@ -318,7 +321,7 @@ def act_map(request, act_id):
     
     map = folium.Map(location=centrer_point, zoom_start=map_zoom)
                                                
-    #   kw = {
+    #kw = {
     #   "color": "blue",
     #   "line_cap": "round",
     #   "fill": True,
@@ -327,7 +330,8 @@ def act_map(request, act_id):
     #   "popup": "Mon rectangle",
     #   "tooltip": "<strong>Click me!</strong>",
     #   }        
-    #   folium.Rectangle(bounds=[[myRectangle[0],myRectangle[1]],[myRectangle[2],myRectangle[3]]],line_join="round",dash_array="5, 5",**kw,).add_to(map)
+    
+    #folium.Rectangle(bounds=[[myRectangle[0],myRectangle[1]],[myRectangle[2],myRectangle[3]]],line_join="round",dash_array="5, 5",**kw,).add_to(map)
 
     ###############################################
     #   Plot Polylines onto Folium Map
@@ -364,8 +368,7 @@ def act_map(request, act_id):
         "main_map":map_html        
     }
 
-
-    strava_user = get_strava_user_id()
+    strava_user = get_strava_user_id(request,my_strava_user)
 
     ## Check col passed new
     if act_statut == 0:
@@ -390,7 +393,7 @@ def fColsListView(request,**kwargs):
 
     country_region = get_country_region(code_paysregion)
            
-    update_user_var(get_strava_user(),country_region[0],country_region[1])
+    update_user_var(request.session.get("strava_user"),country_region[0],country_region[1])
         
     template = 'cols_list.html' 
     return render (request, template, {'col_list':listeCols})
@@ -478,11 +481,11 @@ def new_col_form(request):
         form = ColForm()
         return render(request , 'new_col.html' , {'form' : form})    
     
-def update_strava_user_id(username):
+def get_strava_user_id(request,username):
     f_debug_trace("views.py","update_strava_user_id","username = "+str(username))
-    set_strava_user(username)
     id = User.objects.get(username=username).pk    
     uid = UserSocialAuth.objects.get(id=id).uid    
-    set_strava_user_id(uid)
+    request.session['strava_user'] = str(username)
+    request.session['strava_user_id'] = uid
     return uid
     

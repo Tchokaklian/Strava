@@ -1,6 +1,5 @@
 from django.db import models
-
-from StravaMap.vars import display_year_month, get_strava_user_id
+from StravaMap.vars import display_year_month
 
 # Create your models here.
 
@@ -205,7 +204,7 @@ class User_dashboard(models.Model):
 		nbCols = Col_counter.objects.count()		
 
 		# DB save
-		self.strava_user_id = get_strava_user_id()
+		### BUG self.strava_user_id = get_strava_user_id()
 		self.col_count = nbCols
 		self.save()
 		return nbCols

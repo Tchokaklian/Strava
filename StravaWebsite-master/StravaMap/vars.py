@@ -1,4 +1,3 @@
-from StravaWebsite import settings
 from StravaWebsite.settings import APP_CLIENT_ID, COLOMARS, COUNTRY, DEPARTEMENT, LEVEL_COL_DEBUG, SALTA, SOCIAL_AUTH_STRAVA_SECRET
 
 MONTHES = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"]
@@ -10,23 +9,7 @@ def f_debug_col():
     return ret    
 
 def f_debug_trace(classe,function,value):      
-    print("Debug >>> Class: ", classe, " >>> function: ",function, " >>> values: ",value)
-
-
-def set_strava_user_id(suid):
-    settings.strava_user_id = suid    
-    return 0
-
-def get_strava_user_id():
-    return settings.strava_user_id
-
-def set_strava_user(user):
-    f_debug_trace("vars.py","set_strava_user",user)
-    settings.strava_user = user
-    return 0
-
-def get_strava_user():    
-    return settings.strava_user
+    print("[Debug] >>> Class: ", classe, " >>> function: ",function, " >>> ",str(value))
 
 def get_app_client_secret():
     return SOCIAL_AUTH_STRAVA_SECRET   

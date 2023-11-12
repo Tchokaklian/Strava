@@ -3,7 +3,7 @@ import numpy as N
 import requests
 from StravaMap.models import Strava_user
 
-from StravaMap.vars import  get_app_client_id, get_app_client_secret, get_strava_user
+from StravaMap.vars import  f_debug_trace, get_app_client_id, get_app_client_secret
 
 import warnings
 
@@ -182,7 +182,7 @@ def map_zoom(centrerPoint, listePoint= PointGPS() ):
 
 #########################################################
 
-def refresh_access_token():
+def refresh_access_token(strava_user):
     """ Refresh du token strava 
     
     Parametres :
@@ -193,14 +193,11 @@ def refresh_access_token():
     """
 
     refresh_token = ""
-    myUser_unique = Strava_user.objects.all().filter(strava_user = get_strava_user())
+    myUser_unique = Strava_user.objects.all().filter(strava_user = strava_user)
     for oneOk in myUser_unique:
             myUser = oneOk            
             refresh_token = myUser.refresh_token                        
-            #access_token = myUser.access_token
-            #print("refresh_token========================")
-            #print(refresh_token)
-
+            
     payload_refresh = {
         'client_id': {get_app_client_id()},
         'client_secret': {get_app_client_secret()},
@@ -218,7 +215,7 @@ def refresh_access_token():
         myUser.save()
         
     except:
-        print("ERROR Refresh Token Error")
+        f_debug_trace("col_tools.py","refresh_access_token","Refresh Token Error")
         return False
     
     return True
