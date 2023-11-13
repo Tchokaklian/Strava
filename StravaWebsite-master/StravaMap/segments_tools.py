@@ -8,7 +8,7 @@ from StravaMap.vars import f_debug_trace
 #   Retourne  la liste des segments pertinents
 ################################################
 
-def segment_explorer(myRectangle, access_token, strava_id):
+def segment_explorer(myRectangle, access_token, strava_id, strava_user_id):
             
     header = {'Authorization': 'Bearer ' + str(access_token)}            
     param = {'id': strava_id, 'min_cat' : 3 }
@@ -50,7 +50,7 @@ def segment_explorer(myRectangle, access_token, strava_id):
                         segment_id = oneSegment.segment_id
 
             #Performances
-            save_segment_perf(segment_id, strava_id, access_token, elev_difference)
+            save_segment_perf(segment_id, strava_id, access_token, elev_difference,strava_user_id)
 
             ret = ret + 1                    
     return ret
@@ -59,7 +59,7 @@ def segment_explorer(myRectangle, access_token, strava_id):
 #   Retourne  les chronos sur un segment
 ################################################
 
-def save_segment_perf(segment_id, segment_strava_id, access_token, elev_difference):
+def save_segment_perf(segment_id, segment_strava_id, access_token, elev_difference, strava_user_id):
         
     param = {'segment_id': segment_strava_id}
     header = {'Authorization': 'Bearer ' + str(access_token)} 
@@ -73,10 +73,14 @@ def save_segment_perf(segment_id, segment_strava_id, access_token, elev_differen
     performance_url = performance_url + "&access_token="+ str(access_token)
         
     performanceResponse = requests.get(performance_url, headers=header, params=param).json()
-    
-    ret = 0        
-    for onePerf in performanceResponse:
 
+    ret = 0        
+
+    if performanceResponse['message'] == "Payment Required":
+        return ret
+            
+    for onePerf in performanceResponse:
+        
         fc_avg = 0
         fc_max = 0
         idPerf = onePerf["id"]
@@ -98,7 +102,7 @@ def save_segment_perf(segment_id, segment_strava_id, access_token, elev_differen
         # DB Insert New One          
         perf_list = Perform.objects.all().filter(strava_perf_id = idPerf).all()
         if len(perf_list) == 0 :
-            myPerf = Perform( strava_perf_id = idPerf, segment_id = segment_id, perf_date = myDate, perf_chrono = temps, perf_vam = vam, perf_fc = fc_avg, perf_fcmax = fc_max)
+            myPerf = Perform( strava_perf_id = idPerf, segment_id = segment_id, perf_date = myDate, perf_chrono = temps, perf_vam = vam, perf_fc = fc_avg, perf_fcmax = fc_max, strava_user_id = strava_user_id)
             myPerf.save()
                                         
     return ret

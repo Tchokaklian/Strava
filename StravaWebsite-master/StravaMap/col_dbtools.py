@@ -1,13 +1,11 @@
 from aifc import Error
-import datetime
 import sqlite3
 import time
-
 from StravaMap import cols_tools as ct
-from StravaMap.models import Activity, Col, Col_counter as cc, Col_perform as cp, Country, Month_stat, Region, User_var
+from StravaMap.models import Activity, Col, Col_counter as cc, Col_perform as cp, Month_stat, User_var
 from django.db.models import F
 
-from StravaMap.vars import f_debug_col, f_debug_trace, get_default_country
+from StravaMap.vars import f_debug_col, f_debug_trace
 
 
 #############################################################################
@@ -71,11 +69,11 @@ def select_all_cols(conn, region_info):
 
 #############################################################################
     
-def insert_activity (conn, user_id, strava_id, act_name, act_start_date, act_dist, act_den, act_type, act_time, act_power, act_status):
+def insert_activity (conn, strava_user_id, strava_id, act_name, act_start_date, act_dist, act_den, act_type, act_time, act_power, act_status):
     try:
         cur = conn.cursor()
-        sql = "INSERT INTO StravaMap_activity (user_id, strava_id, act_name, act_start_date, act_dist, act_den, act_type, act_time, act_power, act_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-        value = (user_id, strava_id, act_name, act_start_date, act_dist, act_den, act_type, act_time, act_power, act_status)
+        sql = "INSERT INTO StravaMap_activity (strava_user_id, strava_id, act_name, act_start_date, act_dist, act_den, act_type, act_time, act_power, act_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        value = (strava_user_id, strava_id, act_name, act_start_date, act_dist, act_den, act_type, act_time, act_power, act_status)
         
         cur.execute(sql, value)
         conn.commit()
@@ -110,25 +108,25 @@ def insert_col_perform(conn,act_id,rows):
 
 #############################################################################
 
-def compute_cols_by_act( conn, myUser_id,myActivity_id):
-                        
+def compute_cols_by_act( conn, my_strava_user_id,myActivity_id):
+                            
     perf = cp.objects.filter(strava_id=myActivity_id).values_list("col_code", flat=True)
                         
     for colCode in perf:        
         
-        nbPassage = getActivitiesByCol(conn,colCode)        
+        nbPassage = getActivitiesByCol(conn,my_strava_user_id,colCode)        
                 
-        exists = cc.objects.filter(col_code=colCode, user_id=myUser_id).count()
+        exists = cc.objects.filter(col_code=colCode).filter(strava_user_id=my_strava_user_id).count()
                 
         if exists==0:
             new_cc = cc()
             new_cc.col_code=colCode
             new_cc.col_count=1
-            new_cc.user_id=myUser_id
+            new_cc.strava_user_id=my_strava_user_id
             new_cc.save()            
             f_debug_trace("col_dbtools.py","compute_cols_by_act","Nouveau col: " + new_cc.get_col_name())            
         else:
-            my_cc = cc.objects.filter(col_code=colCode, user_id=myUser_id)
+            my_cc = cc.objects.filter(col_code=colCode, strava_user_id=my_strava_user_id)            
             upd_cc = my_cc[0]
             upd_cc.col_count=nbPassage
             upd_cc.save()
@@ -140,10 +138,10 @@ def compute_cols_by_act( conn, myUser_id,myActivity_id):
             act.save()
 
                                            
-def cols_effectue(conn):
+def cols_effectue(conn, suid):
 
     cur = conn.cursor()
-    cur.execute("select col_name, col_alt, col_count, C.col_code from StravaMap_col C , StravaMap_col_counter M where C.col_code = M.col_code order by M.col_count desc")
+    cur.execute("select col_name, col_alt, col_count, C.col_code from StravaMap_col C , StravaMap_col_counter CC where C.col_code = CC.col_code and CC.strava_user_id = " + str(suid)+ " order by CC.col_count desc")
     rows = cur.fetchall()
 
     return rows
@@ -206,10 +204,10 @@ def getColByActivity(conn,strava_id):
             
 ###########################################################################################################
 
-def getActivitiesByCol(conn, col_code):                
+def getActivitiesByCol(conn, strava_user_id, col_code):                
     cur = conn.cursor()        
-    sqlExec = "select act_id from StravaMap_activity A, StravaMap_col_perform P where user_id = 366232 and A.strava_id = P.strava_id and col_code = '"+col_code+"'"
-    
+    sqlExec = "select act_id from StravaMap_activity A, StravaMap_col_perform P where strava_user_id = "+strava_user_id+" and A.strava_id = P.strava_id and col_code = '"+col_code+"'"
+        
     cur.execute(sqlExec)    
     rows = cur.fetchall()    
     myListActivities = 0
@@ -217,7 +215,7 @@ def getActivitiesByCol(conn, col_code):
     for row in rows :                        
         #TODO -        
         myListActivities = myListActivities+1
-                                
+                                    
     return myListActivities   
 
 ##########################################################################################################
@@ -280,8 +278,8 @@ def get_country_region(code_paysregion):
 
 ###########################################################################################################
     
-def update_user_var(strava_user, country_code, region_code):        
-    my_user_var_sq = User_var.objects.all().filter(strava_user = strava_user)
+def update_user_var(strava_user_id, country_code, region_code):        
+    my_user_var_sq = User_var.objects.all().filter(strava_user_id = strava_user_id)
 
     for oneOk in my_user_var_sq:
             myUser_var = oneOk
@@ -291,8 +289,8 @@ def update_user_var(strava_user, country_code, region_code):
 
 ###########################################################################################################            
 
-def get_user_region_view(strava_user):    
-    my_user_var_sq = User_var.objects.all().filter(strava_user = strava_user)        
+def get_user_region_view(strava_user_id):        
+    my_user_var_sq = User_var.objects.filter(strava_user_id = strava_user_id)        
     view_country_code = "FRA"
     view_region_code = "06"    
     for oneOk in my_user_var_sq:            
@@ -319,7 +317,7 @@ def compute_all_month_stat(my_user_id: int):
     topAlt = {}
         
     millisecBegin = int(time.time() * 1000)    
-    activities = Activity.objects.all()
+    activities = Activity.objects.filter(strava_user_id = my_user_id)
 
     for oneActivity in activities:
         if oneActivity.act_type == "Run" or oneActivity.act_type == "Ride" or oneActivity.act_type == "Hike":            

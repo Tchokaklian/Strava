@@ -34,7 +34,7 @@ class Col(models.Model):
 class Activity(models.Model):
 	act_id = models.IntegerField(null=False, primary_key=True)	
 	strava_id = models.IntegerField(null=False, default=0)	
-	user_id	= models.IntegerField(null=False)	
+	strava_user_id	= models.IntegerField(null=False)	
 	act_name = models.CharField(max_length=200, null=True, default="")
 	act_start_date = models.DateTimeField(null=False)
 	act_dist = models.FloatField(null=True)
@@ -103,7 +103,7 @@ class Col_perform(models.Model):
 class Col_counter(models.Model):
 	col_count_id = models.IntegerField(auto_created=True,  primary_key=True)
 	col_code = models.CharField(max_length=20, default="-")
-	user_id	= models.IntegerField(null=False)
+	strava_user_id	= models.IntegerField(null=False)
 	col_count = models.IntegerField(null=False)	
 
 	def get_col_name(self):		
@@ -122,7 +122,8 @@ class Col_counter(models.Model):
 		return q1[0].col_alt
 	
 class Strava_user(models.Model):	
-	strava_user_id = models.IntegerField(auto_created=True,  primary_key=True)
+	id = models.IntegerField(auto_created=True,  primary_key=True)
+	strava_user_id = models.IntegerField(null=True)
 	strava_user = models.CharField(max_length=100, default="-") 
 	first_name = models.CharField(max_length=100, default="-")
 	last_name = models.CharField(max_length=100, default="-")
@@ -130,7 +131,6 @@ class Strava_user(models.Model):
 	access_token = models.CharField(max_length=100, default="-")
 	refresh_token = models.CharField(max_length=100, default="-")
 	expire_at = models.IntegerField(null=True)
-	athlete_id = models.IntegerField(null=True)
 	city = models.CharField(max_length=50, null=True)
 	country = models.CharField(max_length=50, null=True)
 	sex = models.CharField(max_length=100, null=True)
@@ -148,6 +148,7 @@ class Perform(models.Model):
 	perform_id = models.IntegerField(auto_created=True,  primary_key=True)
 	strava_perf_id = models.IntegerField(null=True)
 	segment_id = models.IntegerField(null=False)		
+	strava_user_id = models.IntegerField(null=True)
 	perf_date = models.DateTimeField(null=False)
 	perf_chrono = models.IntegerField(null=False)
 	perf_vam = models.IntegerField(null=False)
@@ -187,13 +188,13 @@ class Perform(models.Model):
 		return hms		
 
 class User_var(models.Model):				
-	strava_user = models.CharField(max_length=100, primary_key=True, default="-") 
+	id = models.IntegerField(auto_created=True,  primary_key=True)			
 	strava_user_id = models.IntegerField(null=True)
 	view_country_code = models.CharField(max_length=20, default="FRA")
 	view_region_code = models.CharField(max_length=20, default="06")
 
-class User_dashboard(models.Model):				
-	strava_user = models.CharField(max_length=100, primary_key=True, default="-") 
+class User_dashboard(models.Model):			
+	id = models.IntegerField(auto_created=True,  primary_key=True)		
 	strava_user_id = models.IntegerField(null=True)
 	col_count = models.IntegerField(null=True)
 	col2000_count = models.IntegerField(null=True)
@@ -201,19 +202,15 @@ class User_dashboard(models.Model):
 	run_year_km  = models.IntegerField(null=True)
 
 	def set_col_count(self):	
-		nbCols = Col_counter.objects.count()		
-
-		# DB save
-		### BUG self.strava_user_id = get_strava_user_id()
+		nbCols = Col_counter.objects.filter(strava_user_id=self.strava_user_id).count()				
+		# DB save		
 		self.col_count = nbCols
 		self.save()
 		return nbCols
 	
 	def set_col2000_count(self):	
-		## All Col Counter 
-		## TODO need to filter by user
-
-		lcc = Col_counter.objects.all()
+		## All Col Counter 		
+		lcc = Col_counter.objects.filter(strava_user_id=self.strava_user_id)
 		listeCC = []
 		for one_cc in lcc:
 			listeCC.append(one_cc.col_code)
@@ -234,10 +231,9 @@ class User_dashboard(models.Model):
 		return nbCols2000
 	
 	def set_bike_year_km(self):	
-		## All Activities 
-		## TODO need to filter by user
-
-		lActivity = Activity.objects.all().filter(act_start_date__gt="2023-01-01").filter(act_type="Ride")		
+		## All Activities 		
+		
+		lActivity = Activity.objects.filter(strava_user_id=self.strava_user_id).filter(act_start_date__gt="2023-01-01").filter(act_type="Ride")		
 		distance_BY = 0		
 		for one_act in lActivity:			
 			distance_BY = distance_BY + one_act.act_dist/1000			
@@ -248,15 +244,13 @@ class User_dashboard(models.Model):
 		return self.bike_year_km
 	
 	def set_run_year_km(self):	
-		## All Activities 
-		## TODO need to filter by user
-
-		lActivity = Activity.objects.all().filter(act_start_date__gt="2023-01-01").filter(act_type="Run")				
+		## All Activities 		
+		
+		lActivity = Activity.objects.filter(strava_user_id=self.strava_user_id).filter(act_start_date__gt="2023-01-01").filter(act_type="Run")				
 		distance_RY = 0
 		for one_act in lActivity:
 			distance_RY = distance_RY + one_act.act_dist/1000
-			
-		
+					
 		self.run_year_km = int(distance_RY)
 		self.save()
 				
