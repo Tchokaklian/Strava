@@ -50,7 +50,11 @@ def segment_explorer(myRectangle, access_token, strava_id, strava_user_id):
                         segment_id = oneSegment.segment_id
 
             #Performances
-            save_segment_perf(segment_id, strava_id, access_token, elev_difference,strava_user_id)
+
+            payment = save_segment_perf(segment_id, strava_id, access_token, elev_difference,strava_user_id)
+
+            if payment == 0:
+                break
 
             ret = ret + 1                    
     return ret
@@ -76,9 +80,15 @@ def save_segment_perf(segment_id, segment_strava_id, access_token, elev_differen
 
     ret = 0        
 
-    if performanceResponse['message'] == "Payment Required":
-        return ret
-            
+    try:
+        if performanceResponse['message'] == "Payment Required":
+            f_debug_trace("segments_tools","save_segment_perf","Payment Required")
+            return ret
+    except:
+        f_debug_trace("segments_tools","save_segment_perf","Payment OK")
+
+    ret = 1        
+                            
     for onePerf in performanceResponse:
         
         fc_avg = 0
@@ -90,12 +100,12 @@ def save_segment_perf(segment_id, segment_strava_id, access_token, elev_differen
         try:
             fc_avg = onePerf["average_heartrate"]	
         except:            
-            ret = 1
+            ret = 2
 
         try:
             fc_max = onePerf["max_heartrate"]	            
         except:                        
-            ret = 1
+            ret = 3
                              				        
         vam = int(3600*elev_difference/temps)
 
