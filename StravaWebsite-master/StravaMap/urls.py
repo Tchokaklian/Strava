@@ -27,9 +27,9 @@ urlpatterns = [
     path('cols/<pk>/', ColsDetailView.as_view(), name = "col-detail"),                           
     path('cols/<int:col_id>/<int:act_id>/', act_map_by_col, name = "col-act"),                           
     ###        
-    path('cols06ok/', ColsOkListView.as_view(), name='colsok'),                           
-    path('cols06ok/<pk>/', ColsDetailView.as_view(),name = "col-detail"),           
-    path('cols06ok/<int:col_id>/<int:act_id>/', act_map_by_col, name = "col-act"),                                  
+    path('colsok/', ColsOkListView.as_view(), name='colsok'),                           
+    path('colsok/<pk>/', ColsDetailView.as_view(),name = "col-detail"),           
+    path('colsok/<int:col_id>/<int:act_id>/', act_map_by_col, name = "col-act"),                                  
     ###
     path('cols06ko/', Cols06koListView.as_view(), name='cols06ko'),                    
     path('cols06ko/<pk>/', ColsDetailView.as_view(),name = "col-detail"),                           

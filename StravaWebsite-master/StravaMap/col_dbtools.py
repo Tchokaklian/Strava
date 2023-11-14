@@ -1,4 +1,5 @@
 from aifc import Error
+import datetime
 import sqlite3
 import time
 from StravaMap import cols_tools as ct
@@ -316,9 +317,8 @@ def compute_all_month_stat(my_user_id: int):
     cols2000Count = {}
     topAlt = {}
         
-    millisecBegin = int(time.time() * 1000)    
+    millisecBegin = int(time.time() * 1000)        
     activities = Activity.objects.filter(strava_user_id = my_user_id)
-
     for oneActivity in activities:
         if oneActivity.act_type == "Run" or oneActivity.act_type == "Ride" or oneActivity.act_type == "Hike":            
             formatedDate = oneActivity.act_start_date.strftime("%Y%m")

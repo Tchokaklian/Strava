@@ -2,11 +2,12 @@
 
 {% block content %}
     
-    <h3>{{ object.col_name }}</h3>        
+    <h3>{{ object.col_name }}</h3>            
     <p> <b>Altitude : </b>{{ object.col_alt }} m</p>
     <p> <b>Code cent cols : </b>{{ object.col_code }}</p>
     <p> <b>Lat/Lon : </b>{{ object.col_lat }} / {{ object.col_lon }}</p>
-    
+
+         
     <!--Begin Map Container-->  
      
      {% load static %} <a href="{% url 'Col Map View' col_id=object.col_id %}"><img src="{% static '/image/map.png' %}"  /> Voir sur la carte</a>    
@@ -14,6 +15,7 @@
     <br><br>
         
     <p> <b>Activités:</b> </p>    
+                               
     <table id = "myTable" width="100%" class="sortable n-last" >              
         <thead>
             <tr>
@@ -25,27 +27,28 @@
             </tr>  
         </thead>    
         <tbody>
-        
-            {% for activity in object.get_activities_passed %}   
-                <div class="activities">                                     
+                    
+            {% for key in activities %}
+                <div class="activities">                                                         
                     <tr>                                                
-                        <td data-sort={{activity.get_activity_date|date:"ymd"}} >                    
-                            {{activity.get_activity_date|date:"d M Y" }} 
+                        <td data-sort={{key.act_start_date|date:"ymd"}} >                    
+                            {{key.act_start_date|date:"d M Y" }} 
                           </td>
                         <td>
-                            <a href={{activity.get_activity_id}}>  {{ activity.get_activity_name }}</a> 
+                            <a href={{key.act_id}}>  {{ key.act_name }}</a> 
                         </td>
-                        <td data-sort={{activity.get_activity_dist}}>
-                            {{ activity.get_activity_dist }} km 
-                        </td>
-                        <td>
-                            {{ activity.get_activity_den }} m
+                        <td data-sort={{key.act_dist}}>
+                            {{key.get_act_dist_km|floatformat:2}} km
                         </td>
                         <td>
-                            {{ activity.get_activity_type }}
+                            {{key.act_den|floatformat:0}}   m
                         </td>
-                    </tr>
+                        <td>                            
+                            {{ key.act_type }}                                                                                                                 
+                        </td>
+                    </tr>                    
                 </div>
+                                   
             {% endfor %}    
         </tbody>
     </table>

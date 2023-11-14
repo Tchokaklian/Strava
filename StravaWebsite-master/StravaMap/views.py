@@ -5,7 +5,7 @@ import requests
 import pandas as pd
 import polyline
 from StravaMap.forms import ColForm
-from StravaMap.models import Activity, Month_stat, Perform, Region, Segment, User_dashboard, User_var
+from StravaMap.models import Activity, Col_perform, Month_stat, Perform, Region, Segment, User_dashboard, User_var
 from StravaMap.models import Col, Country
 from StravaMap.models import Col_counter
 from StravaMap.models import Strava_user
@@ -184,7 +184,7 @@ def connected_map(request):
             sport_type = activities_df['sport_type'][ligne]
             act_time = int(activities_df['moving_time'][ligne])
             act_power = activities_df['average_watts'][ligne]
-            act_status = 1 # not analyzed
+            act_status = 1
             strava_user_id = get_strava_user_id(request,user)
 
             ########## Delete / Insert ###############
@@ -390,6 +390,15 @@ def col_map_by_act(request,act_id,col_id):
 
 ##########################################################################
 
+def fActivitiesListView(request, col_code):        
+    strava_user_id = request.session.get('strava_user_id') 
+    listActivities = Activity.objects.filter(strava_user_id=strava_user_id)
+    listActivitiesPassed = Col_perform.objects.filter(col_code = col_code)
+
+    return listActivities
+    
+##########################################################################    
+
 def fColsListView(request,**kwargs):        
             
     code_paysregion = kwargs['pk']        
@@ -425,7 +434,7 @@ class ColsOkListView(generic.ListView):
 class Cols06koListView(generic.ListView):        
     def get_queryset(self):                
         strava_user_id = self.request.session.get('strava_user_id')    
-        qsOk = Col_counter.objects.all()
+        qsOk = Col_counter.objects.filter(strava_user_id=strava_user_id)
         lOk= []
 
         for oneOk in qsOk:
@@ -444,9 +453,28 @@ class ActivityDetailView(generic.DetailView):
     model = Activity        
                                                                             
 class ColsDetailView(generic.DetailView):
-	# specify the model to use    
+	# specify the model to use            
     model = Col    
 
+    def get_context_data(self, **kwargs):
+        ### Looking for activities on this col for the context user
+        context = super(ColsDetailView, self).get_context_data(**kwargs)
+        strava_user_id = self.request.session.get('strava_user_id')            
+        le_col = context["object"]        
+        listColPerform = le_col.get_activities_passed()        
+        liste_activities = []        
+        for cp in listColPerform:            
+            pk_activity = cp.strava_id
+            myActivities= Activity.objects.filter(strava_id = pk_activity)
+            for lactivity in myActivities:                                
+                if int(strava_user_id) == int(lactivity.strava_user_id):
+                    liste_activities.append(lactivity)                            
+        context.update({'strava_user_id': strava_user_id})
+        context.update({'activities': liste_activities})        
+        f_debug_trace("views.py","ColsDetailView",liste_activities)
+        return context
+    
+       
 class User_dashboardView(generic.ListView):	
     def get_queryset(self):                
         strava_user_id = self.request.session.get('strava_user_id')             

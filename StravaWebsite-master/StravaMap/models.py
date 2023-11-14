@@ -49,13 +49,13 @@ class Activity(models.Model):
 	
 	def get_col_passed(self):
 		sc = self.strava_id		
-		q1 = Col_perform.objects.filter(strava_id=sc)		
+		q1 = Col_perform.objects.filter(strava_id=sc)
 		return q1
 						
-class Col_perform(models.Model):
+class 	Col_perform(models.Model):
 	col_perf_id = models.IntegerField(auto_created=True,  primary_key=True)
 	col_code = models.CharField(max_length=20, null=False, default="-" )
-	strava_id = models.IntegerField(null=False)	
+	strava_id = models.IntegerField(null=False)	### id activity
 
 	class Meta:
 		ordering = ['-strava_id']
@@ -69,37 +69,7 @@ class Col_perform(models.Model):
 		sc = self.col_code
 		q1 = Col.objects.filter(col_code=sc)		
 		return q1[0].col_id
-		
-	def get_activity_name(self):		
-		sc = self.strava_id
-		q1 = Activity.objects.filter(strava_id=sc)			
-		return q1[0].act_name
-	
-	def get_activity_id(self):		
-		sc = self.strava_id
-		q1 = Activity.objects.filter(strava_id=sc)			
-		return q1[0].act_id
-	
-	def get_activity_date(self):		
-		sc = self.strava_id
-		q1 = Activity.objects.filter(strava_id=sc)			
-		return q1[0].act_start_date
 			
-	def get_activity_dist(self):		
-		sc = self.strava_id
-		q1 = Activity.objects.filter(strava_id=sc)			
-		return int(q1[0].act_dist/1000)
-	
-	def get_activity_den(self):		
-		sc = self.strava_id
-		q1 = Activity.objects.filter(strava_id=sc)			
-		return q1[0].act_den
-	
-	def get_activity_type(self):		
-		sc = self.strava_id
-		q1 = Activity.objects.filter(strava_id=sc)			
-		return q1[0].act_type
-
 class Col_counter(models.Model):
 	col_count_id = models.IntegerField(auto_created=True,  primary_key=True)
 	col_code = models.CharField(max_length=20, default="-")
