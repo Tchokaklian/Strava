@@ -30,7 +30,7 @@ def base_map(request):
     my_strava_user_id = get_strava_user_id(request,user)
                                   
     # Make your map object
-    view_region_info =  get_user_region_view(my_strava_user_id)            
+    view_region_info =  get_user_data_values(my_strava_user_id)            
     continent = "EUROPE"
     if view_region_info[0] == "AR":
         continent = "SOUTHAMERICA"
@@ -44,7 +44,7 @@ def base_map(request):
     folium.LayerControl().add_to(main_map)
 
     # Statistiques Mensuelles     
-    compute_all_month_stat(my_strava_user_id)
+    # compute_all_month_stat(my_strava_user_id)
     
     # Les cols passés
     colOK = cols_effectue(conn,my_strava_user_id )    
@@ -125,12 +125,13 @@ def connected_map(request):
     
     my_strava_user_id = get_strava_user_id(request,user)
     my_user_var_sq = User_var.objects.filter(strava_user_id = my_strava_user_id)
-
+    
     if my_user_var_sq.count() == 0:
         my_user_var = User_var()
         my_user_var.strava_user_id = my_strava_user_id
+        my_user_var.last_update = datetime.datetime.today().timestamp()
         my_user_var.save() 
-            
+                
     # Get activity data
     header = {'Authorization': 'Bearer ' + str(access_token)}
     
@@ -221,7 +222,11 @@ def connected_map(request):
         "main_map":main_map_html
     }
 
-            
+    update_user_var(request.session.get("strava_user_id"),"","",datetime.datetime.now().timestamp())
+
+    # Statistiques Mensuelles     
+    compute_all_month_stat(my_strava_user_id)
+                
     return render(request, 'index.html', context)
 
 
@@ -407,7 +412,7 @@ def fColsListView(request,**kwargs):
 
     country_region = get_country_region(code_paysregion)
            
-    update_user_var(request.session.get("strava_user_id"),country_region[0],country_region[1])
+    update_user_var(request.session.get("strava_user_id"),country_region[0],country_region[1],0)
         
     template = 'cols_list.html' 
     return render (request, template, {'col_list':listeCols})
@@ -469,7 +474,7 @@ class ColsDetailView(generic.DetailView):
             for lactivity in myActivities:                                
                 if int(strava_user_id) == int(lactivity.strava_user_id):
                     liste_activities.append(lactivity)                            
-        context.update({'strava_user_id': strava_user_id})
+        context.update({'strava_user_id': strava_user_id})        
         context.update({'activities': liste_activities})        
         f_debug_trace("views.py","ColsDetailView",liste_activities)
         return context

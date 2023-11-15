@@ -162,6 +162,7 @@ class User_var(models.Model):
 	strava_user_id = models.IntegerField(null=True)
 	view_country_code = models.CharField(max_length=20, default="FRA")
 	view_region_code = models.CharField(max_length=20, default="06")
+	last_update = models.IntegerField(null=True)
 
 class User_dashboard(models.Model):			
 	id = models.IntegerField(auto_created=True,  primary_key=True)		

@@ -279,18 +279,21 @@ def get_country_region(code_paysregion):
 
 ###########################################################################################################
     
-def update_user_var(strava_user_id, country_code, region_code):        
+def update_user_var(strava_user_id, country_code, region_code,now):        
     my_user_var_sq = User_var.objects.all().filter(strava_user_id = strava_user_id)
 
     for oneOk in my_user_var_sq:
-            myUser_var = oneOk
-            myUser_var.view_country_code = country_code
-            myUser_var.view_region_code = region_code            
+            myUser_var = oneOk            
+            if len(country_code):
+                myUser_var.view_country_code = country_code
+                myUser_var.view_region_code = region_code            
+            if now > 0:
+                myUser_var.last_update = now
             myUser_var.save()
-
+           
 ###########################################################################################################            
 
-def get_user_region_view(strava_user_id):        
+def get_user_data_values(strava_user_id):        
     my_user_var_sq = User_var.objects.filter(strava_user_id = strava_user_id)        
     view_country_code = "FRA"
     view_region_code = "06"    
@@ -298,11 +301,12 @@ def get_user_region_view(strava_user_id):
             myUser_var = oneOk
             view_country_code = myUser_var.view_country_code                                                           
             view_region_code = myUser_var.view_region_code                                                                                               
-    region_info = [view_country_code,view_region_code]     
+            last_update = myUser_var.last_update
+    values_info = [view_country_code,view_region_code,last_update]     
 
-    f_debug_trace('col_dbtools.py','get_user_region_view',region_info)
+    f_debug_trace('col_dbtools.py','get_user_data_values',values_info)
 
-    return region_info
+    return values_info
 
 ###########################################################################################################
 
@@ -316,7 +320,7 @@ def compute_all_month_stat(my_user_id: int):
     colsCount = {}    
     cols2000Count = {}
     topAlt = {}
-        
+                        
     millisecBegin = int(time.time() * 1000)        
     activities = Activity.objects.filter(strava_user_id = my_user_id)
     for oneActivity in activities:
@@ -406,7 +410,7 @@ def compute_all_month_stat(my_user_id: int):
 
     f_debug_trace("col_db_tools.py","compute_all_month_stat",str(millisecEnd-millisecBegin)+" ms")
     
-    return 0
+    return 1
 
 ###########################################################################################################
 
