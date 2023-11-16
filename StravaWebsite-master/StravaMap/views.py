@@ -405,17 +405,18 @@ def fActivitiesListView(request, col_code):
 ##########################################################################    
 
 def fColsListView(request,**kwargs):        
+
+    template = 'cols_list.html' 
             
     code_paysregion = kwargs['pk']        
-
+    
     listeCols = Col.objects.filter(col_code__icontains=code_paysregion).order_by("col_alt")
-
-    country_region = get_country_region(code_paysregion)
-           
+    country_region = get_country_region(code_paysregion)           
+    country_name = get_country_from_code(country_region[0])    
+    region_name = get_region_from_code(country_region[0],country_region[1])
     update_user_var(request.session.get("strava_user_id"),country_region[0],country_region[1],0)
-        
-    template = 'cols_list.html' 
-    return render (request, template, {'col_list':listeCols})
+            
+    return render (request, template, {'col_list':listeCols , 'country':country_name , 'region':region_name })
     
 ##########################################################################    
     
@@ -426,7 +427,7 @@ class ColsListView(generic.ListView):
     def get_context_data(self, **kwargs):
         context = super(ColsListView, self).get_context_data(**kwargs)
         context['countries'] = Country.objects.all()
-        context['regions'] = Region.objects.all().order_by("region_code")  
+        context['regions'] = Region.objects.all().order_by("region_code")          
         return context
               
 class ColsOkListView(generic.ListView):        

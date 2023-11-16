@@ -3,7 +3,7 @@ import datetime
 import sqlite3
 import time
 from StravaMap import cols_tools as ct
-from StravaMap.models import Activity, Col, Col_counter as cc, Col_perform as cp, Month_stat, User_var
+from StravaMap.models import Activity, Col, Col_counter as cc, Col_perform as cp, Country, Month_stat, Region, User_var
 from django.db.models import F
 
 from StravaMap.vars import f_debug_col, f_debug_trace
@@ -256,7 +256,7 @@ def recompute_activity(strava_id, activities_df, strava_user):
 ###########################################################################################################
 
 def get_country_region(code_paysregion):    
-    ### TODO                
+    ### TODO PT 
     lPaysA = []    
     lPaysA.append("FR")
     lPaysA.append("IT")    
@@ -276,6 +276,26 @@ def get_country_region(code_paysregion):
     country_region.append(country)
     country_region.append(region)    
     return country_region
+
+###########################################################################################################
+
+def get_country_from_code(code):        
+    ### TODO PT 
+    if code == "AR":
+        code = "ARG"        
+    return Country.objects.get(pk=code).country_name
+
+###########################################################################################################
+
+def get_region_from_code(codepays,coderegion):        
+    ### TODO PT 
+    if codepays == "AR":
+        codepays = "ARG"                
+    ret = "not found"
+    lr = Region.objects.filter(country_code=codepays).filter(region_code=coderegion)
+    for one_region in lr:
+        ret =  one_region.region_name
+    return ret
 
 ###########################################################################################################
     
