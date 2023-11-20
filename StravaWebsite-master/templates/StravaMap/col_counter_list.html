@@ -3,7 +3,7 @@
 {% block content %}
   <h3>Tous les cols effectués</h3>
   {% if col_counter_list %}
-     
+           
 <table class="sortable n-last">
     <thead>
     <tr>         
@@ -11,6 +11,9 @@
         <th class="indicator-left">Code</th>
         <th class="indicator-left">Altitude</th>     
         <th class="indicator-left">Nombre de passages</th>     
+        <th class="indicator-left">Nombre de passages {{ annee }}</th>     
+        <th class="indicator-left">Pays</th>     
+        <th class="indicator-left">Département</th>     
     </tr>  
     </thead>    
     <tbody>
@@ -29,6 +32,15 @@
       </td>             
       <td align="center">
         {{colc.col_count}}
+      </td>
+      <td align="center">
+        {{colc.year_col_count}}        
+      </td>
+      <td align="center">
+        {{colc.get_country_name}}    
+      </td>
+      <td align="center">
+        {{colc.get_region_name}}     
       </td>
     {% endfor %}
   </tbody>

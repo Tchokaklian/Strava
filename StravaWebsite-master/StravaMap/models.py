@@ -8,6 +8,7 @@ class Country(models.Model):
 	country_name = models.CharField(max_length=50)
 	country_lat = models.FloatField(null=True)
 	country_lon = models.FloatField(null=True)
+	code_100cols = models.CharField(max_length=3, null = True)
 		
 class Region(models.Model):			
 	region_id = models.IntegerField(auto_created=True,  primary_key=True)
@@ -75,6 +76,7 @@ class Col_counter(models.Model):
 	col_code = models.CharField(max_length=20, default="-")
 	strava_user_id	= models.IntegerField(null=False)
 	col_count = models.IntegerField(null=False)	
+	year_col_count = models.IntegerField(null=False, default=0)	
 
 	def get_col_name(self):		
 		sc = self.col_code
@@ -90,7 +92,26 @@ class Col_counter(models.Model):
 		sc = self.col_code
 		q1 = Col.objects.filter(col_code=sc)		
 		return q1[0].col_alt
+		
+	def get_country_name(self):		
+		sc = self.col_code[0:2]			
+		q1 = Country.objects.filter(code_100cols=sc)		
+		return q1[0].country_name
 	
+	def get_region_name(self):		
+		sc = self.col_code[0:2]				
+		q1 = Country.objects.filter(code_100cols=sc)				
+		country_code = q1[0].country_code		
+		rc = self.col_code[3:5]
+		#TODO
+		if country_code == "ARG":
+			rc = self.col_code[3:4]
+		q2 = Region.objects.filter(country_code=country_code).filter(region_code=rc)
+		region_name = "Not Found"
+		for one in q2:
+			region_name = one.region_name
+		return region_name
+				
 class Strava_user(models.Model):	
 	id = models.IntegerField(auto_created=True,  primary_key=True)
 	strava_user_id = models.IntegerField(null=True)

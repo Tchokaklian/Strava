@@ -226,7 +226,9 @@ def connected_map(request):
 
     # Statistiques Mensuelles     
     compute_all_month_stat(my_strava_user_id)
-                
+    # Liste des Cols des l'année
+    set_col_count_list_this_year(my_strava_user_id)
+                    
     return render(request, 'index.html', context)
 
 
@@ -437,6 +439,14 @@ class ColsOkListView(generic.ListView):
         qsOk = Col_counter.objects.filter(strava_user_id=strava_user_id).order_by("-col_count")                                                                   
         return qsOk
     
+    def get_context_data(self, **kwargs):
+        context = super(ColsOkListView, self).get_context_data(**kwargs)
+        currentDateTime = datetime.datetime.now()
+        date = currentDateTime.date()
+        year = date.strftime("%Y")        
+        context['annee'] = str(year)
+        return context
+                
 class Cols06koListView(generic.ListView):        
     def get_queryset(self):                
         strava_user_id = self.request.session.get('strava_user_id')    

@@ -463,3 +463,36 @@ def compute_month_stat(stravaUserId,yyyy_mm,formatedDay,bikeKm,BikeAsc, bikeTime
             newLine.save()
     
     return 0
+
+#####################################################################################
+
+def set_col_count_list_this_year(strava_user_id):
+
+    millisecBegin = int(time.time() * 1000)        
+
+    conn = create_connection('db.sqlite3')
+
+    currentDateTime = datetime.datetime.now()
+    date = currentDateTime.date()
+    year = date.strftime("%Y")+'-01-01'        
+
+    cur = conn.cursor()            
+    sqlExec = "select count(*) as compteur, col_code from StravaMap_col_perform P, StravaMap_activity A where P.strava_id = A.strava_id	and strava_user_id = "+strava_user_id+" and act_start_date > '"+year+"' group by col_code"
+            
+    cur.execute(sqlExec)    
+    myListCompte = cur.fetchall()    
+
+    nombre_de_passages = {}
+    for one_col_y in myListCompte:        
+        nombre_de_passages[one_col_y[1]] = one_col_y[0]
+
+    for oneCount in cc.objects.filter(strava_user_id=strava_user_id):
+        oneCount.year_col_count = nombre_de_passages.get(oneCount.col_code, 0)                
+        oneCount.save()
+                                        
+    millisecEnd = int(time.time() * 1000)
+
+    f_debug_trace("col_db_tools.py","set_col_count_list_this_year",str(millisecEnd-millisecBegin)+" ms")
+
+    return 1
+
