@@ -66,9 +66,9 @@ def base_map(request):
 
         # Altitude
         if  myCol.col_type == "R":            
-            folium.Marker(location, popup=myCol.name,icon=folium.Icon(color=colColor, icon="flag")).add_to(feature_group_road)        
+            folium.Marker(location, popup=myCol.name+" ("+str(myCol.alt)+"m)",icon=folium.Icon(color=colColor, icon="flag")).add_to(feature_group_road)        
         if  myCol.col_type == "P":            
-            folium.Marker(location, popup=myCol.name,icon=folium.Icon(color=colColor, icon="flag")).add_to(feature_group_piste)        
+            folium.Marker(location, popup=myCol.name+" ("+str(myCol.alt)+"m)",icon=folium.Icon(color=colColor, icon="flag")).add_to(feature_group_piste)        
         
     
     main_map_html = main_map._repr_html_() # Get HTML for website
@@ -264,7 +264,8 @@ def col_map(request, col_id):
         col_location = [myCol.lat,myCol.lon]
         colColor = "blue"
         map = folium.Map(col_location, zoom_start=15)
-        folium.Marker(col_location, popup=myCol.name,icon=folium.Icon(color=colColor, icon="flag")).add_to(map)      
+        myPopup = myCol.name+" ("+str(myCol.alt)+"m)"
+        folium.Marker(col_location, popup=myPopup,icon=folium.Icon(color=colColor, icon="flag")).add_to(map)      
 
     map_html = map._repr_html_()
     
@@ -369,7 +370,8 @@ def act_map(request, act_id):
         myCol.setPoint(oneCol)
         col_location = [myCol.lat,myCol.lon]
         colColor = "blue"        
-        folium.Marker(col_location, popup=myCol.name,icon=folium.Icon(color=colColor, icon="flag")).add_to(map)      
+        mypopup = myCol.name+" ("+str(myCol.alt)+"m)"
+        folium.Marker(col_location, popup=mypopup,icon=folium.Icon(color=colColor, icon="flag")).add_to(map)      
         ##### Count Update #####
                    
             
@@ -526,9 +528,12 @@ class MonthStatListView(generic.ListView):
 def new_col_form(request):
     if request.method  == 'POST':         
         form = ColForm(request.POST)
-        if form.is_valid():            
+        if form.is_valid():        
             form.save()
             return redirect('../cols/')
+        else:
+            form = ColForm()
+            return render(request , 'new_col.html' , {'form' : form})        
     else:                
         form = ColForm()
         return render(request , 'new_col.html' , {'form' : form})    
