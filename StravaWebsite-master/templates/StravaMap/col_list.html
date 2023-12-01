@@ -32,8 +32,9 @@
 {% extends "base_generic.html" %}
 
 {% block content %}
-
-  <h3>Tous les cols en base</h3>  
+  <hr />
+  <h3>{{ col_list.count }} cols en base </h3>  
+  <hr />
   {% load static %} 
   <a href="{% url 'index' %}"><img src="{% static '/image/map.png' %}"  /> Voir sur la carte</a>   
   {% if col_list %}

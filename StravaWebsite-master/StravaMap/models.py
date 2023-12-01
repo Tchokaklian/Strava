@@ -77,6 +77,8 @@ class Col_counter(models.Model):
 	strava_user_id	= models.IntegerField(null=False)
 	col_count = models.IntegerField(null=False)	
 	year_col_count = models.IntegerField(null=False, default=0)	
+	last_passage_date = models.DateTimeField(null=True)
+	last_act_id = models.IntegerField(null=True)
 
 	def get_col_name(self):		
 		sc = self.col_code
@@ -111,7 +113,11 @@ class Col_counter(models.Model):
 		for one in q2:
 			region_name = one.region_name
 		return region_name
-				
+	
+	def get_country_region_code(self):		
+		sc = self.col_code[0:5]						
+		return sc
+								
 class Strava_user(models.Model):	
 	id = models.IntegerField(auto_created=True,  primary_key=True)
 	strava_user_id = models.IntegerField(null=True)

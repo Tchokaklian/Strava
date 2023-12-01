@@ -1,6 +1,7 @@
 {% extends "base_generic.html" %}
 
 {% block content %}
+    <hr />
     <h1>{{ object.act_name }}</h1>
     {{ object.act_type }}
     ( Strava = {{ object.strava_id }} )
@@ -10,8 +11,7 @@
     {{ object.get_act_dist_km|floatformat:2 }} km
     <br> 
     {{ object.act_den }} m                               
-    <br>               
-    <br>               
+    <hr />        
     {% if object.get_col_passed  %}
         Nombre de Cols passés: {{ object.get_col_passed|length }}
     {% endif %}

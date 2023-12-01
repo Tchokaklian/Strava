@@ -184,10 +184,14 @@ def connected_map(request):
             act_den = activities_df['total_elevation_gain'][ligne]          
             sport_type = activities_df['sport_type'][ligne]
             act_time = int(activities_df['moving_time'][ligne])
-            act_power = activities_df['average_watts'][ligne]
+            try:
+                act_power = activities_df['average_watts'][ligne]
+            except:
+                act_power=0
+
             act_status = 1
             strava_user_id = get_strava_user_id(request,user)
-
+            
             ########## Delete / Insert ###############
             # insert activities and col for each one
             ##########################################
@@ -212,9 +216,12 @@ def connected_map(request):
             compute_cols_by_act(conn,my_strava_user_id,strava_id)
                         
         # Plot Polylines onto Folium Map
+        my_color = 'red'
         for pl in activities_df['polylines']:
+            if sport_type == "Run":
+                my_color = "Blue"
             if len(pl) > 0: # Ignore polylines with length zero (Thanks Joukesmink for the tip)
-                folium.PolyLine(locations=pl, color='red').add_to(main_map)                
+                folium.PolyLine(locations=pl, color=my_color).add_to(main_map)                
             
     # Return HTML version of map
     main_map_html = main_map._repr_html_() # Get HTML for website

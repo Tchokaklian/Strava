@@ -2,10 +2,12 @@ from aifc import Error
 import datetime
 import sqlite3
 import time
+
+import pytz
 from StravaMap import cols_tools as ct
 from StravaMap.models import Activity, Col, Col_counter as cc, Col_perform as cp, Country, Month_stat, Region, User_var
 from django.db.models import F
-
+from django.utils import timezone
 from StravaMap.vars import f_debug_col, f_debug_trace
 
 
@@ -110,7 +112,7 @@ def insert_col_perform(conn,act_id,rows):
 #############################################################################
 
 def compute_cols_by_act( conn, my_strava_user_id,myActivity_id):
-                            
+                                
     perf = cp.objects.filter(strava_id=myActivity_id).values_list("col_code", flat=True)
                         
     for colCode in perf:        
@@ -473,13 +475,15 @@ def set_col_count_list_this_year(strava_user_id):
     conn = create_connection('db.sqlite3')
 
     currentDateTime = datetime.datetime.now()
+    
     date = currentDateTime.date()
     year = date.strftime("%Y")+'-01-01'        
 
     cur = conn.cursor()            
+
     sqlExec = "select count(*) as compteur, col_code from StravaMap_col_perform P, StravaMap_activity A where P.strava_id = A.strava_id	and strava_user_id = "+strava_user_id+" and act_start_date > '"+year+"' group by col_code"
-            
     cur.execute(sqlExec)    
+
     myListCompte = cur.fetchall()    
 
     nombre_de_passages = {}
@@ -490,9 +494,36 @@ def set_col_count_list_this_year(strava_user_id):
         oneCount.year_col_count = nombre_de_passages.get(oneCount.col_code, 0)                
         oneCount.save()
                                         
-    millisecEnd = int(time.time() * 1000)
+    millisecMid = int(time.time() * 1000)
 
-    f_debug_trace("col_db_tools.py","set_col_count_list_this_year",str(millisecEnd-millisecBegin)+" ms")
+    f_debug_trace("col_db_tools.py","set_col_count_list_this_year - part 1 ",str(millisecMid-millisecBegin)+" ms")
 
+    ###
+
+    sqlExec2 =  "select max(act_start_date),col_code, A.act_id from StravaMap_col_perform C, StravaMap_activity A where A.strava_id = C.strava_id and strava_user_id = "+strava_user_id+" group by col_code"
+    cur.execute(sqlExec2)    
+
+    myListPass = cur.fetchall()    
+    
+    last_passages = {}
+    last_passages_id = {}
+
+    for one_passage in myListPass:                                                        
+        last_passages[one_passage[1]] = one_passage[0]  # act_start_date
+        last_passages_id[one_passage[1]] = one_passage[2]  # id activity
+    
+    for oneCount in cc.objects.filter(strava_user_id=strava_user_id):                                        
+        act_id = last_passages_id.get(oneCount.col_code, None)                                      
+        date_time_str = last_passages.get(oneCount.col_code, None)                                      
+        date_str = date_time_str[0:10]                                        
+        date_object = datetime.datetime.strptime(date_str, '%Y-%m-%d')
+        my_datetime = timezone.make_aware(date_object, timezone.get_current_timezone())
+        oneCount.last_passage_date = my_datetime
+        oneCount.last_act_id = act_id
+        oneCount.save()
+                                        
+    millisecend = int(time.time() * 1000)
+
+    f_debug_trace("col_db_tools.py","set_col_count_list_this_year - part 2",str(millisecend-millisecMid)+" ms")
+        
     return 1
-
