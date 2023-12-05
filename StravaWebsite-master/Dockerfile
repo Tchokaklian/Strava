@@ -2,10 +2,10 @@
 FROM python:3.8
 
 # Set the working directory in the container
-WORKDIR /Strava
+WORKDIR /StravaWebsite-master
 
 # Copy the application files into the working directory
-COPY . /Strava
+COPY . /StravaWebsite-master
 
 # Install the application dependencies
 RUN pip install -r requirements.txt
