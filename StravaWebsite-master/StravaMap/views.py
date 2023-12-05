@@ -38,8 +38,9 @@ def base_map(request):
 
     conn = create_connection('db.sqlite3')    
     
-    feature_group_road = folium.FeatureGroup(name="Route").add_to(main_map)    
-    feature_group_piste = folium.FeatureGroup(name="Piste").add_to(main_map)    
+    feature_group_Road = folium.FeatureGroup(name="Route").add_to(main_map)    
+    feature_group_Piste = folium.FeatureGroup(name="Piste").add_to(main_map)    
+    feature_group_Sentier = folium.FeatureGroup(name="Sentier").add_to(main_map)    
             
     folium.LayerControl().add_to(main_map)
 
@@ -64,11 +65,13 @@ def base_map(request):
         if myCol.col_code in listeOK :
             colColor = "green"
 
-        # Altitude
+        # Surface
         if  myCol.col_type == "R":            
-            folium.Marker(location, popup=myCol.name+" ("+str(myCol.alt)+"m)",icon=folium.Icon(color=colColor, icon="flag")).add_to(feature_group_road)        
+            folium.Marker(location, popup=myCol.name+" ("+str(myCol.alt)+"m)",icon=folium.Icon(color=colColor, icon="flag")).add_to(feature_group_Road)        
         if  myCol.col_type == "P":            
-            folium.Marker(location, popup=myCol.name+" ("+str(myCol.alt)+"m)",icon=folium.Icon(color=colColor, icon="flag")).add_to(feature_group_piste)        
+            folium.Marker(location, popup=myCol.name+" ("+str(myCol.alt)+"m)",icon=folium.Icon(color=colColor, icon="flag")).add_to(feature_group_Piste)        
+        if  myCol.col_type == "S":            
+            folium.Marker(location, popup=myCol.name+" ("+str(myCol.alt)+"m)",icon=folium.Icon(color=colColor, icon="flag")).add_to(feature_group_Sentier)        
         
     
     main_map_html = main_map._repr_html_() # Get HTML for website
